@@ -21,6 +21,7 @@ const earthTexture = textureLoader.load('map2.jpg');
 const sphereGeometry = new THREE.SphereGeometry(100, 64, 64);
 const sphereMaterial = new THREE.MeshStandardMaterial({ map: earthTexture });
 const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+sphere.visible = false;
 sphereGroup.add(sphere);
 
 // Lighting
@@ -42,7 +43,7 @@ function latLonToCartesian(lat, lon, radius) {
 }
 
 // Fetch station data
-async function fetchStationsFromLocal(limit = 500) {
+async function fetchStationsFromLocal(limit = 500000) {
     try {
         const response = await fetch('./stations.json'); 
         const stations = await response.json();
@@ -79,16 +80,17 @@ function addStationsAsParticles() {
 
     const particleMaterial = new THREE.PointsMaterial({
         map: particleTexture,
-        size: 1.5,
+        size: 0.9,
         transparent: true,
         alphaTest: 0.5,
         blending: THREE.AdditiveBlending
+        
     });
 
     particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     particles = new THREE.Points(particleGeometry, particleMaterial);
     sphereGroup.add(particles);
-}
+}                         
 
 // Raycasting for click detection
 const raycaster = new THREE.Raycaster();
@@ -158,5 +160,5 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-fetchStationsFromLocal(500);
+fetchStationsFromLocal(500000);
 animate();
