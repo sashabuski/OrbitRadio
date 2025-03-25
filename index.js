@@ -21,11 +21,18 @@ scene.background = new THREE.Color(0xE9E9E9);
 // Load Earth texture
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load('map2.jpg');
-const sphereGeometry = new THREE.SphereGeometry(100, 64, 64);
-const sphereMaterial = new THREE.MeshStandardMaterial({ map: earthTexture });
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.visible = false;
-sphereGroup.add(sphere);
+
+
+const geometry = new THREE.SphereGeometry(100, 40, 40); // radius, width segments, height segments
+const wireframe = new THREE.WireframeGeometry(geometry);
+
+// Create a line material for the wireframe
+const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  // Set opacity (range: 0 to 1)
+    transparent: true });
+
+// Create a mesh for the wireframe lines
+const line = new THREE.LineSegments(wireframe, material);
+sphereGroup.add(line);
 
 let circleGeometry = new THREE.CircleGeometry(2, 32);
 let circleMaterial = new THREE.MeshBasicMaterial({
@@ -212,32 +219,42 @@ function addStationsAsParticles() {
 
 // Raycasting for click detection
 
-
 function onClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObject(particles);
 
-    if (intersects.length > 0) {
-        //console.log("daskjdha");
-        const index = intersects[0].index; // Get the index of the clicked particle
-        const station = particleIndexMap.get(index);
-        if (station) {
-            //console.log('Clicked Station:', station);
+    // Check all particle systems (particles and cityParticleSystems)
+    const allParticles = [particles, ...cityParticleSystems]; // Combine single and city particle systems
 
-            const material = station.material;
-            console.log(material);
+    for (let system of allParticles) {
+        const intersects = raycaster.intersectObject(system);
 
-            if (material instanceof THREE.PointsMaterial) {
-               // console.log('Size before:', material.size);
+        if (intersects.length > 0) {
+            const index = intersects[0].index; // Get the index of the clicked particle
+            const station = particleIndexMap.get(index);
+            if (station) {
+                console.log('Clicked Station:', station);
+                const material = station.material;
 
-                // Increase the size by 20%
-                material.size *= 1.2;
-    
-                // Log the size after changing it
-               // console.log('Size after:', material.size);
+                if (material instanceof THREE.PointsMaterial) {
+                    console.log('Size before:', material.size);
+                    material.size *= 1.2; // Increase size to indicate selection
+                    console.log('Size after:', material.size);
+                }
+
+                // Load the audio stream from the station URL
+                if (station.url) {
+                    const audioPlayer = document.getElementById("audioPlayer");
+                    const streamSource = document.getElementById("streamSource");
+                    const text = document.getElementById("track-name");
+                    text.textContent = station.name;
+                    streamSource.src = station.url;  // Set the station URL as the source
+                    audioPlayer.load();             // Load the new stream URL
+                    audioPlayer.play();             // Optionally, start playing automatically
+                    console.log('Now playing stream from:', station.url);
+                }
             }
         }
     }
