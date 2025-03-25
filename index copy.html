@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Radio Globe</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.min.js"
+            }
+        }
+    </script>
+    <style>
+    
+
+        :root {
+      --box-background-color: #E9E9E9; /* Box background color */
+      --box-outline-color: #6D78D4; /* Outline color */
+      --tab-background-color: rgba(109, 120, 212, 0.8); /* Tab background color */
+      --tab-hover-color: #42489f; /* Tab hover color */
+      --tab-border-color:  rgba(109, 120, 212, 0.8); /* Border color for tabs */
+      --tab-active-color: #42489f;
+    }
+
+    @font-face {
+  font-family: 'CustomFont'; /* Choose a name for your font */
+  src: url('font.otf') format('opentype'); /* Path to your TTF file */
+  font-weight: normal;
+  font-style: normal;
+}
+
+    body {
+      font-family: 'CustomFont', sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+
+    /* Floating box styles */
+    .floating-box {
+      position: fixed;
+      bottom: 2%;
+      left: 1%;
+     
+      width: 20vw;
+      height: 70vh;
+      background-color: var(--box-background-color);
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      outline: 1px solid var(--box-outline-color); /* Outline for the floating box */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .drag-handle {
+      width: 100%;
+      height: 30px;
+      background-color: var(--tab-background-color);
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    /* Tabs container */
+    .tabs {
+      display: flex;
+      background-color: var(--tab-background-color);
+      padding: 0px;
+      border-bottom: 1px solid var(--tab-border-color); /* Border separating tabs */
+    }
+
+    /* Individual tab button */
+    .tab-button {
+      flex: 1;
+      background: none;
+      border: none;
+      color: white;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.3s ease;
+      border-right: 1px solid var(--tab-border-color); /* Border separating tabs */
+    }
+
+    /* Remove border on the last tab */
+    .tab-button:last-child {
+      border-right: none;
+    }
+
+    /* Hover effect for tabs */
+    .tab-button:hover {
+      background-color: var(--tab-hover-color);
+    }
+
+    /* Content area styles */
+    .content {
+      flex: 1;
+      padding: 1px;
+      overflow-y: auto;
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    /* List styles for each tab */
+    .list {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 0px;
+    }
+
+    .list-item {
+      background-color: #E9E9E9;
+    padding-bottom: 4px;
+    padding-top: 5px;
+      margin: 1px 0;
+      transition: background-color 0.3s ease; 
+     font-size: 12px;
+      border-bottom: 1px solid #6D78D4; 
+    }
+
+    .list-item:hover {
+    background-color: #6D78D4; /* Light grey background on hover */
+    cursor: pointer; /* Change cursor to indicate interactivity */
+}
+
+    .locationtext {
+      
+    
+      
+    margin-top: 0px;
+    margin-bottom: 0px;
+     font-size: 8px;
+      
+    }
+
+    /* Hidden class for inactive tabs */
+    .hidden {
+      display: none;
+    }
+
+    .resizer {
+      width: 15px;
+      height: 15px;
+      background-color: var(--tab-border-color);
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      cursor: nwse-resize;
+      border-bottom-right-radius: 4px;
+    }
+
+
+       
+        #image-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            height: 100px; 
+            z-index: 10;
+        }
+
+        /* Position the audio container at the bottom center */
+        #audio-container {
+            position: absolute;
+            bottom: 2%; /* Adjust the distance from the bottom */
+            left: 50%;
+            transform: translateX(-50%); /* Center horizontally */
+            width: 300px;  /* Adjust width as needed */
+            height: 50px;  /* Adjust height as needed */
+        }
+
+        #audioPlayer {
+            width: 100%;
+            height: 100%;
+            /* Transparent background with 50% alpha */
+            border: none;
+        }
+
+
+        .tab-button.active {
+            background-color: var(--tab-active-color); /* Highlight active tab */
+        }
+
+        #audio-text {
+            position: absolute;
+            top: 0;
+            left: 100px;
+            right: 20px;
+            color: black;  /* Set the text color to black */
+            font-size: 14px;
+            line-height: 50px;  /* Center text vertically */
+            padding: 0 10px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .no-hover:hover {
+    background-color: #E9E9E9; /* or any other value that removes hover effect */
+    cursor: default;
+}
+
+        .search-box {
+            padding: 5px;
+            width: 94%;
+
+            margin-bottom: 10px;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background-color: rgba(109, 120, 212, 0.5); 
+        }
+
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display,
+        audio::-webkit-media-controls-timeline {
+            display: none;
+        }
+        /* Create the scrolling effect */
+        #audio-text span {
+            display: inline-block;
+            animation: scrollText 15s linear infinite; /* Adjust the duration for speed */
+        }
+
+        /* Define the scrolling animation */
+        @keyframes scrollText {
+            from {
+                transform: translateX(100%);  /* Start off the right side */
+            }
+            to {
+                transform: translateX(-100%);  /* End off the left side */
+            }
+        }
+
+        /* If the text is small, stop the animation */
+        #audio-text.no-scroll span {
+            animation: none;
+        }
+    </style>
+</head>
+<body>
+    <img id="image-overlay" src="ologo.png" alt="Overlay Image">
+    
+    <div id="audio-container">
+        <audio id="audioPlayer" controls>
+            <source id = "streamSource" src="streamSource" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div id="audio-text">
+            <span id="track-name">Now Playing: Amazing Song Title by Artist Name - This is a really long track name that should scroll across the audio player.</span>
+        </div>
+    </div>
+
+
+    <div class="floating-box">
+        <div class="tabs">
+          <button class="tab-button" onclick="showTab(1)"><img src="heart.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+          <button class="tab-button" onclick="showTab(2)"> <img src="search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
+            </button>
+          <button class="tab-button" onclick="showTab(3)"><img src="home.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+          <button class="tab-button" onclick="showTab(4)"><img src="explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+          <button class="tab-button" onclick="showTab(5)"><img src="planet.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+        </div>
+        <div class="content">
+          <div id="tab-1" class="tab-content">
+            <ul class="list">
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+            </ul>
+          </div>
+          <div id="tab-2" class="tab-content hidden">
+             
+                    <input type="text" id="search-box" class="search-box no-hover" style="margin-top: 10px;" placeholder="Search items..." onkeyup="filterList()">
+                
+                <ul class="list">
+               
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+            </ul>
+          </div>
+          <div id="tab-3" class="tab-content hidden">
+            <ul class="list">
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+            </ul>
+          </div>
+          <div id="tab-4" class="tab-content hidden">
+            <ul class="list">
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+            </ul>
+          </div>
+          <div id="tab-5" class="tab-content hidden">
+            <ul class="list">
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    
+      <script>
+        // Function to show the content of the selected tab
+        function showTab(tabNumber) {
+            // Hide all tab content
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById('tab-' + tabNumber).classList.remove('hidden');
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab-button');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to the clicked tab
+            const selectedTab = document.querySelectorAll('.tab-button')[tabNumber - 1];
+            selectedTab.classList.add('active');
+        }
+
+        showTab(1); 
+
+            // Dragging functionality
+    const box = document.getElementById('draggable-box');
+    const dragHandle = document.getElementById('drag-handle');
+    let isDragging = false, offsetX, offsetY;
+
+    dragHandle.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - box.getBoundingClientRect().left;
+      offsetY = e.clientY - box.getBoundingClientRect().top;
+      box.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      let x = e.clientX - offsetX, y = e.clientY - offsetY;
+      box.style.left = `${Math.max(0, Math.min(x, window.innerWidth - box.offsetWidth))}px`;
+      box.style.top = `${Math.max(0, Math.min(y, window.innerHeight - box.offsetHeight))}px`;
+    });
+
+    document.addEventListener('mouseup', () => isDragging = false);
+
+    // Resizing functionality
+    const resizer = document.getElementById('resizer');
+    let isResizing = false, startWidth, startHeight, startX, startY;
+
+    resizer.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      startWidth = box.offsetWidth;
+      startHeight = box.offsetHeight;
+      startX = e.clientX;
+      startY = e.clientY;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      box.style.width = `${Math.max(150, startWidth + e.clientX - startX)}px`;
+      box.style.height = `${Math.max(200, startHeight + e.clientY - startY)}px`;
+    });
+
+    document.addEventListener('mouseup', () => isResizing = false);
+      </script>
+    
+    <script type="module" src="test.js"></script>
+    <script>
+        const audioText = document.getElementById("audio-text");
+        const trackNameSpan = document.getElementById("track-name");
+
+        // Check if text overflows and apply the scrolling effect accordingly
+        function checkTextOverflow() {
+            if (trackNameSpan.scrollWidth > audioText.clientWidth) {
+                audioText.classList.add("scroll");  // Enable scrolling
+            } else {
+                audioText.classList.remove("scroll");  // Disable scrolling
+            }
+        }
+
+        // Check for overflow when the page loads and when resizing
+        window.addEventListener("load", checkTextOverflow);
+        window.addEventListener("resize", checkTextOverflow);
+    </script>
+</body>
+</html>

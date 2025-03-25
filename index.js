@@ -249,7 +249,13 @@ function onClick(event) {
                     const audioPlayer = document.getElementById("audioPlayer");
                     const streamSource = document.getElementById("streamSource");
                     const text = document.getElementById("track-name");
-                    text.textContent = station.name;
+                    
+                    if(station.state){
+                        text.textContent = station.name+" - "+station.state+", "+station.country;
+                    }else{
+                    text.textContent = station.name+" - "+station.country;
+                    
+                    }
                     streamSource.src = station.url;  // Set the station URL as the source
                     audioPlayer.load();             // Load the new stream URL
                     audioPlayer.play();             // Optionally, start playing automatically
@@ -354,7 +360,7 @@ window.addEventListener('mouseup', onMouseUp, false);
 // Animation Loop
 function animate() {
     requestAnimationFrame(animate);
-    camera.position.z += (targetZ - camera.position.z) * 0.05;
+    camera.position.z += (targetZ - camera.position.z) * 0.1;
    
    if(hoverCircle.visible == false){
     sphereGroup.rotation.y += 0.001;
