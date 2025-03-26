@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Radio Globe</title>
+    <title>OrbitRadio</title>
     <script type="importmap">
         {
             "imports": {
@@ -15,7 +15,7 @@
     
 
         :root {
-      --box-background-color: #E9E9E9; /* Box background color */
+      --box-background-color: rgba(164,177,255, 0.5);; /* Box background color */
       --box-outline-color: #6D78D4; /* Outline color */
       --tab-background-color: rgba(109, 120, 212, 0.8); /* Tab background color */
       --tab-hover-color: #42489f; /* Tab hover color */
@@ -43,6 +43,7 @@
       background-color: #f0f0f0;
     }
 
+
     /* Floating box styles */
     .floating-box {
       position: fixed;
@@ -52,40 +53,63 @@
       width: 20vw;
       height: 70vh;
       background-color: var(--box-background-color);
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      border-top-right-radius: 0px;
+      border-top-left-radius: 0px;
+      box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
       outline: 1px solid var(--box-outline-color); /* Outline for the floating box */
-      overflow: hidden;
+    
       display: flex;
       flex-direction: column;
     }
+    
     .drag-handle {
-      width: 100%;
-      height: 30px;
-      background-color: var(--tab-background-color);
-      cursor: grab;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      user-select: none;
-    }
+  width: 19.5%;
+  height: 20px;
+  background-color: rgba(109, 120, 212, 0.8);
+  cursor: grab;
+  position: absolute;
+  top: -79px;
+  right: -0.5px;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 6px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
+ 
+  color: rgba(109, 120, 212, 0.8);
+  font-weight: bold;
+  user-select: none;
+  border: 1px solid var(--tab-border-color);
+
+}
+
     .drag-handle:active {
       cursor: grabbing;
     }
 
     /* Tabs container */
     .tabs {
+        position: absolute;
       display: flex;
       background-color: var(--tab-background-color);
       padding: 0px;
-      border-bottom: 1px solid var(--tab-border-color); /* Border separating tabs */
+      border: 1px solid var(--tab-border-color); /* Border separating tabs */
+      overflow: hidden;
+    top: -54.5px;
+    width: 100%; /* Change from 20vw to 100% */
+    left: 0;
+    left: -0.9px;
+    box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
+    border-top-left-radius: 6px;
+
     }
 
     /* Individual tab button */
     .tab-button {
       flex: 1;
+      overflow: hidden;
       background: none;
       border: none;
       color: white;
@@ -94,7 +118,9 @@
       cursor: pointer;
       text-align: center;
       transition: background-color 0.3s ease;
-      border-right: 1px solid var(--tab-border-color); /* Border separating tabs */
+      border-right: 1px solid var(--tab-border-color); 
+      top: 80px;/* Border separating tabs */
+     
     }
 
     /* Remove border on the last tab */
@@ -110,10 +136,9 @@
     /* Content area styles */
     .content {
       flex: 1;
-      padding: 1px;
+      
       overflow-y: auto;
-      padding-left: 10px;
-      padding-right: 10px;
+   
     }
 
     /* List styles for each tab */
@@ -124,18 +149,30 @@
     }
 
     .list-item {
-      background-color: #E9E9E9;
-    padding-bottom: 4px;
-    padding-top: 5px;
-      margin: 1px 0;
+      background-color: rgba(164,177,255, 0);
+    padding-bottom: 0px;
+    padding-top: 9px;
+      margin-top: 0px 0;
+      margin-bottom: 0px 0;
       transition: background-color 0.3s ease; 
-     font-size: 12px;
-      border-bottom: 1px solid #6D78D4; 
+     font-size: 17px;
+     color: #221e73;
+      padding-left: 10px;
+      padding-right: 10px;
+    
     }
+
+    .border-container {
+  width: 100%; /* Adjust length */
+  border-bottom: 1px solid #6D78D4;
+  margin: 0 auto; /* Centers the border */
+  padding-bottom: 4px;
+}
 
     .list-item:hover {
     background-color: #6D78D4; /* Light grey background on hover */
     cursor: pointer; /* Change cursor to indicate interactivity */
+    
 }
 
     .locationtext {
@@ -144,7 +181,7 @@
       
     margin-top: 0px;
     margin-bottom: 0px;
-     font-size: 8px;
+     font-size: 13px;
       
     }
 
@@ -162,6 +199,7 @@
       right: 0;
       cursor: nwse-resize;
       border-bottom-right-radius: 4px;
+      border-top-left-radius: 4px;
     }
 
 
@@ -170,8 +208,9 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            height: 100px; 
-            z-index: 10;
+            height: 20vh; 
+            z-index: 0;
+
         }
 
         /* Position the audio container at the bottom center */
@@ -182,12 +221,14 @@
             transform: translateX(-50%); /* Center horizontally */
             width: 300px;  /* Adjust width as needed */
             height: 50px;  /* Adjust height as needed */
+            border-radius: 6px;
         }
 
         #audioPlayer {
             width: 100%;
             height: 100%;
             /* Transparent background with 50% alpha */
+            
             border: none;
         }
 
@@ -216,8 +257,8 @@
 
         .search-box {
             padding: 5px;
-            width: 94%;
-
+            width: 85%;
+margin-left: 10px;
             margin-bottom: 10px;
         }
 
@@ -266,10 +307,16 @@
     </div>
 
 
-    <div class="floating-box">
+    <div class="floating-box " id="draggable-box">
+        
+        <div class="drag-handle"  id="drag-handle">
+            <span></span>
+          </div>
+        
+        
         <div class="tabs">
-          <button class="tab-button" onclick="showTab(1)"><img src="heart.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
-          <button class="tab-button" onclick="showTab(2)"> <img src="search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
+          <button class="tab-button" style="border-top-left-radius: 6px;" onclick="showTab(1)"><img src="heart.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+          <button class="tab-button" style = "top: -20px" onclick="showTab(2)"> <img src="search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
             </button>
           <button class="tab-button" onclick="showTab(3)"><img src="home.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
           <button class="tab-button" onclick="showTab(4)"><img src="explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
@@ -278,9 +325,9 @@
         <div class="content">
           <div id="tab-1" class="tab-content">
             <ul class="list">
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
           <div id="tab-2" class="tab-content hidden">
@@ -289,96 +336,52 @@
                 
                 <ul class="list">
                
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
           <div id="tab-3" class="tab-content hidden">
             <ul class="list">
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
           <div id="tab-4" class="tab-content hidden">
             <ul class="list">
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
           <div id="tab-5" class="tab-content hidden">
             <ul class="list">
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
         </div>
+        <div class="resizer" id="resizer"></div>
       </div>
+    <script>
+      function showTab(tabNumber) {
+        // Hide all tab content
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+        document.getElementById('tab-' + tabNumber).classList.remove('hidden');
     
-      <script>
-        // Function to show the content of the selected tab
-        function showTab(tabNumber) {
-            // Hide all tab content
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-            document.getElementById('tab-' + tabNumber).classList.remove('hidden');
-            
-            // Remove active class from all tabs
-            const tabs = document.querySelectorAll('.tab-button');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            
-            // Add active class to the clicked tab
-            const selectedTab = document.querySelectorAll('.tab-button')[tabNumber - 1];
-            selectedTab.classList.add('active');
-        }
-
-        showTab(1); 
-
-            // Dragging functionality
-    const box = document.getElementById('draggable-box');
-    const dragHandle = document.getElementById('drag-handle');
-    let isDragging = false, offsetX, offsetY;
-
-    dragHandle.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      offsetX = e.clientX - box.getBoundingClientRect().left;
-      offsetY = e.clientY - box.getBoundingClientRect().top;
-      box.style.cursor = 'grabbing';
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      let x = e.clientX - offsetX, y = e.clientY - offsetY;
-      box.style.left = `${Math.max(0, Math.min(x, window.innerWidth - box.offsetWidth))}px`;
-      box.style.top = `${Math.max(0, Math.min(y, window.innerHeight - box.offsetHeight))}px`;
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
-
-    // Resizing functionality
-    const resizer = document.getElementById('resizer');
-    let isResizing = false, startWidth, startHeight, startX, startY;
-
-    resizer.addEventListener('mousedown', (e) => {
-      isResizing = true;
-      startWidth = box.offsetWidth;
-      startHeight = box.offsetHeight;
-      startX = e.clientX;
-      startY = e.clientY;
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isResizing) return;
-      box.style.width = `${Math.max(150, startWidth + e.clientX - startX)}px`;
-      box.style.height = `${Math.max(200, startHeight + e.clientY - startY)}px`;
-    });
-
-    document.addEventListener('mouseup', () => isResizing = false);
-      </script>
+        // Remove active class from all tabs
+        const tabs = document.querySelectorAll('.tab-button');
+        tabs.forEach(tab => tab.classList.remove('active'));
     
+        // Add active class to the clicked tab
+        const selectedTab = tabs[tabNumber - 1];
+        selectedTab.classList.add('active');
+    }
+    
+    showTab(1);
+</script>
     <script type="module" src="index.js"></script>
     <script>
         const audioText = document.getElementById("audio-text");

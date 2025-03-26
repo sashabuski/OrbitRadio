@@ -127,7 +127,7 @@ function addStationsAsParticles() {
         }
        
         if (cluster.length > 1) {
-             console.log(cluster.length);
+            // console.log(cluster.length);
             
             clusters.push(cluster);
         } else {
@@ -217,6 +217,78 @@ function addStationsAsParticles() {
     }
 }
 
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Function to show the content of the selected tab
+   
+
+    // Dragging functionality
+    const box = document.getElementById('draggable-box');
+    const dragHandle = document.getElementById('drag-handle');
+    let isBoxDragging = false, offsetX, offsetY;
+
+    if (box && dragHandle) {
+        dragHandle.addEventListener('mousedown', (e) => {
+            isBoxDragging = true;
+            offsetX = e.clientX - box.getBoundingClientRect().left;
+            offsetY = e.clientY - box.getBoundingClientRect().top;
+            box.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isBoxDragging) return;
+            let x = e.clientX - offsetX, y = e.clientY - offsetY;
+            box.style.left = `${Math.max(0, Math.min(x, window.innerWidth - box.offsetWidth))}px`;
+            box.style.top = `${Math.max(0, Math.min(y, window.innerHeight - box.offsetHeight))}px`;
+        });
+
+        document.addEventListener('mouseup', () => isBoxDragging = false);
+    }
+
+    // Resizing functionality
+    const resizer = document.getElementById('resizer');
+    let isResizing = false, startWidth, startHeight, startX, startY;
+
+    if (resizer) {
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startWidth = box.offsetWidth;
+            startHeight = box.offsetHeight;
+            startX = e.clientX;
+            startY = e.clientY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            // Calculate new dimensions
+            let newWidth = startWidth + e.clientX - startX;
+            let newHeight = startHeight + e.clientY - startY;
+          
+            // Set min/max limits
+            const minWidth = 200;  // Set your desired min width
+            const maxWidth = 600;  // Set your desired max width
+            const minHeight = 250; // Set your desired min height
+            const maxHeight = 700; // Set your desired max height
+          
+            // Apply limits
+            newWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
+            newHeight = Math.min(Math.max(newHeight, minHeight), maxHeight);
+          
+            // Apply new sizes
+            box.style.width = `${newWidth}px`;
+            box.style.height = `${newHeight}px`;
+        });
+
+        document.addEventListener('mouseup', () => isResizing = false);
+    }
+});
+
+
 // Raycasting for click detection
 
 function onClick(event) {
@@ -272,6 +344,11 @@ function onClick(event) {
 
 window.addEventListener('click', onClick, false);
 
+
+
+
+
+
 // Camera & Interaction Setup
 camera.position.z = 230;
 let targetZ = camera.position.z;
@@ -285,13 +362,20 @@ function onWheel(event) {
 }
 
 function onMouseDown(event) {
-    isDragging = true;
-    previousMousePosition = { x: event.clientX, y: event.clientY };
+  
+    const canvas = renderer.domElement;
+console.log(canvas);
+    // Check if the clicked element is NOT the box or the drag handle
+    if (event.target == canvas) {
+        isDragging = true;
+        previousMousePosition = { x: event.clientX, y: event.clientY };
+    }
 }
+
 
 function onMouseMove(event) {
     if (!isDragging) return;
-
+    if (isDragging){
     const deltaX = event.clientX - previousMousePosition.x;
     const deltaY = event.clientY - previousMousePosition.y;
 
@@ -299,7 +383,10 @@ function onMouseMove(event) {
     sphereGroup.rotation.x += deltaY * 0.002;
 
     previousMousePosition = { x: event.clientX, y: event.clientY };
-}function onMouseMoveRaycast(event) {
+}
+}
+
+function onMouseMoveRaycast(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
