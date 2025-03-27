@@ -63,13 +63,46 @@
       flex-direction: column;
     }
     
+    .tooltip {
+      position: absolute;
+      background-color: black;
+      color: white;
+      padding: 10px;
+      width: 200px;
+      height: 30px;
+      border-radius: 5px;
+      white-space: nowrap;
+      font-size: 14px;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: auto; /* Allows interactions */
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Push button to right */
+    }
+
+    .tooltip button {
+      position: relative;
+      background-color: white;
+      color: black;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+
+
+
     .drag-handle {
   width: 19.5%;
   height: 20px;
   background-color: rgba(109, 120, 212, 0.8);
   cursor: grab;
   position: absolute;
-  top: -79px;
+  top: -85px;
   right: -0.5px;
   border-top-left-radius: 30px;
   border-top-right-radius: 6px;
@@ -97,7 +130,7 @@
       padding: 0px;
       border: 1px solid var(--tab-border-color); /* Border separating tabs */
       overflow: hidden;
-    top: -54.5px;
+    top: -60.5px;
     width: 100%; /* Change from 20vw to 100% */
     left: 0;
     left: -0.9px;
@@ -113,7 +146,9 @@
       background: none;
       border: none;
       color: white;
-      padding: 10px;
+      
+      padding-top: 8px;
+      padding-bottom: 8px;
       font-size: 16px;
       cursor: pointer;
       text-align: center;
@@ -141,6 +176,10 @@
    
     }
 
+    .catHeader {
+        font-size: 9px;
+       color: #E9E9E9;  
+    }
     /* List styles for each tab */
     .list {
       list-style-type: none;
@@ -159,6 +198,7 @@
      color: #221e73;
       padding-left: 10px;
       padding-right: 10px;
+      transition: color 0.1s ease, color 0.1s ease;
     
     }
 
@@ -172,7 +212,7 @@
     .list-item:hover {
     background-color: #6D78D4; /* Light grey background on hover */
     cursor: pointer; /* Change cursor to indicate interactivity */
-    
+    color: #E9E9E9;
 }
 
     .locationtext {
@@ -209,9 +249,20 @@
             top: 10px;
             left: 10px;
             height: 20vh; 
+             filter: drop-shadow(0 0px 2px rgba(109, 120, 212, 0.8));
             z-index: 0;
 
         }
+        
+       
+        .image-overlay2 {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    height: 20vh; 
+    filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
+    z-index: 0;
+}
 
         /* Position the audio container at the bottom center */
         #audio-container {
@@ -221,7 +272,16 @@
             transform: translateX(-50%); /* Center horizontally */
             width: 300px;  /* Adjust width as needed */
             height: 50px;  /* Adjust height as needed */
+            border-radius: 1px;
+
+        }
+
+        audio {
+            background-color: #C6CDF4;
             border-radius: 6px;
+            padding: 0%;
+            outline: 1px solid var(--box-outline-color);
+            box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
         }
 
         #audioPlayer {
@@ -263,7 +323,7 @@ margin-left: 10px;
         }
 
         audio::-webkit-media-controls-panel {
-            background-color: rgba(109, 120, 212, 0.5); 
+            background-color: #C6CDF4
         }
 
         audio::-webkit-media-controls-current-time-display,
@@ -294,7 +354,39 @@ margin-left: 10px;
     </style>
 </head>
 <body>
-    <img id="image-overlay" src="ologo.png" alt="Overlay Image">
+
+    <div class="tooltip" id="tooltip">
+        Tooltip text
+        <button style="background: transparent;" onclick="alert('Tooltip button clicked!')"><img style="color: aqua;" src="icon/play.png" alt="Button Image" width="30" height="30"></button>
+      </div>
+
+      <img id="image-overlay" src="logo/ologo.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star1.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star2.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star3.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star4.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star5.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/star6.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/circle1.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/circle2.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/dot1.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/dot2.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/dot3.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/dot4.png" alt="Overlay Image">
+      <img class="image-overlay2 spike" src="logo/spike1.png" alt="Overlay Image">
+      <img class="image-overlay2 spike" src="logo/spike2.png" alt="Overlay Image">
+      <img class="image-overlay2 spike" src="logo/spike3.png" alt="Overlay Image">
+      <img class="image-overlay2 spike" src="logo/spike4.png" alt="Overlay Image">
+      <img class="image-overlay2 orbit-letter" src="logo/o.png" alt="Overlay Image">
+      <img class="image-overlay2 orbit-letter" src="logo/r.png" alt="Overlay Image">
+      <img class="image-overlay2 orbit-letter" src="logo/b.png" alt="Overlay Image">
+      <img class="image-overlay2 orbit-letter" src="logo/i.png" alt="Overlay Image">
+      <img class="image-overlay2 orbit-letter" src="logo/t.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/eye1.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/eye2.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/eye3.png" alt="Overlay Image">
+      <img class="image-overlay2" src="logo/eye4.png" alt="Overlay Image">
+    
     
     <div id="audio-container">
         <audio id="audioPlayer" controls>
@@ -315,12 +407,12 @@ margin-left: 10px;
         
         
         <div class="tabs">
-          <button class="tab-button" style="border-top-left-radius: 6px;" onclick="showTab(1)"><img src="heart.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
-          <button class="tab-button" style = "top: -20px" onclick="showTab(2)"> <img src="search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
-            </button>
-          <button class="tab-button" onclick="showTab(3)"><img src="home.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
-          <button class="tab-button" onclick="showTab(4)"><img src="explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
-          <button class="tab-button" onclick="showTab(5)"><img src="planet.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"></button>
+          <button class="tab-button" style="border-top-left-radius: 6px;" onclick="showTab(1)"><img src="icon/heart.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Favourites</div></button>
+          <button class="tab-button" style = "top: -20px" onclick="showTab(2)"> <img src="icon/search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
+            <div class = "catHeader">Search</div></button>
+          <button class="tab-button" onclick="showTab(3)"><img src="icon/home.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Home</div></button>
+          <button class="tab-button" onclick="showTab(4)"><img src="icon/explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Genres</div></button>
+          <button class="tab-button" onclick="showTab(5)"><img src="icon/planet.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Discover</div></button>
         </div>
         <div class="content">
           <div id="tab-1" class="tab-content">
@@ -366,6 +458,72 @@ margin-left: 10px;
         <div class="resizer" id="resizer"></div>
       </div>
     <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const randomImages = document.querySelectorAll(".image-overlay2:not(.orbit-letter)");
+    const letters = document.querySelectorAll(".orbit-letter");
+    const spikes = document.querySelectorAll(".spike");
+    let letterIndex = 0;
+    let isPaused = false;
+    function toggleRandomImages() {
+        randomImages.forEach(img => {
+          //  const randomChance = Math.random();
+           // img.style.display = randomChance > 0.5 ? "block" : "none";
+        });
+    }
+
+
+
+    function flashLettersSequentially() {
+        if (isPaused) return; // Skip flashing during the break
+
+        // Hide all letters first
+        letters.forEach(img => img.style.display = "none");
+
+        // Show only the current letter
+        letters[letterIndex].style.display = "block";
+
+        // Move to the next letter
+        letterIndex++;
+
+        // If we reached the end (after 't'), pause before restarting
+        if (letterIndex >= letters.length) {
+            isPaused = true; // Activate the break
+
+            // Turn off all letters during the break
+            setTimeout(() => {
+                letters.forEach(img => img.style.display = "none"); // Hide everything
+            }, 300); // Short delay to hide "t" before the break
+
+            setTimeout(() => {
+                isPaused = false; // Resume flashing
+                letterIndex = 0;  // Restart at 'o'
+            }, 1000); // 1.5-second break before restarting
+        }
+    }
+
+
+    function hideSpikesTemporarily() {
+        // Turn off all spikes
+        spikes.forEach(img => img.style.display = "none");
+
+        // Turn them back on after a short delay
+        setTimeout(() => {
+            spikes.forEach(img => img.style.display = "block");
+        }, 100); // They stay off for 300ms
+
+        // Randomly schedule the next "off" flash between 5s and 10s
+        setTimeout(hideSpikesTemporarily, Math.random() * 1000 + 7000);
+    }
+
+    hideSpikesTemporarily(); // Start the cycle
+
+
+    setInterval(toggleRandomImages, 300); // Random images flash every 300ms
+    setInterval(flashLettersSequentially, 300); // Letters flash every 500ms (adjust as needed)
+});
+
+
+
       function showTab(tabNumber) {
         // Hide all tab content
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));

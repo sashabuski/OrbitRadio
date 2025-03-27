@@ -21,9 +21,9 @@ scene.background = new THREE.Color(0xE9E9E9);
 // Load Earth texture
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load('map2.jpg');
+let isHoveringTooltip = false; 
 
-
-const geometry = new THREE.SphereGeometry(100, 40, 40); // radius, width segments, height segments
+const geometry = new THREE.SphereGeometry(98, 40, 40); // radius, width segments, height segments
 const wireframe = new THREE.WireframeGeometry(geometry);
 
 // Create a line material for the wireframe
@@ -389,7 +389,9 @@ function onMouseMove(event) {
 function onMouseMoveRaycast(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
+    const button = document.getElementById("tooltip-btn");
+    const tooltip = document.getElementById("tooltip");
+   
     raycaster.setFromCamera(mouse, camera);
     let closestDistance = Infinity;
     let closestPoint = null;
@@ -427,9 +429,31 @@ function onMouseMoveRaycast(event) {
         hoverCircle.position.copy(closestPoint);
         hoverCircle.position.z +=1;
         hoverCircle.visible = true;
+        const offsetX = 0; // Distance from cursor (horizontal)
+        const offsetY = -15; // Distance from cursor (vertical)
+  
+        tooltip.style.left = `${event.pageX + offsetX}px`;
+        tooltip.style.top = `${event.pageY + offsetY}px`;
+        tooltip.style.visibility = "visible";
+        tooltip.style.opacity = "1";
     } else {
         hoverCircle.visible = false;
+        tooltip.style.visibility = "hidden";
+        tooltip.style.opacity = "0";
     }
+
+
+    tooltip.addEventListener("mouseenter", () => {
+        console.log("jhiji");
+        isHoveringTooltip = true;
+      });
+  
+      tooltip.addEventListener("mouseleave", () => {
+        isHoveringTooltip = false;
+        tooltip.style.visibility = "hidden";
+        tooltip.style.opacity = "0";
+      });
+
 }
 
   
