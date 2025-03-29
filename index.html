@@ -49,7 +49,7 @@
       position: fixed;
       bottom: 2%;
       left: 1%;
-     
+      filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
       width: 20vw;
       height: 70vh;
       background-color: var(--box-background-color);
@@ -65,10 +65,12 @@
     
     .tooltip {
       position: absolute;
-      background-color: black;
+      background-color: rgba(109, 120, 212, 0.8);;
+      box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
+      filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
       color: white;
       padding: 10px;
-      width: 200px;
+      width: 280px;
       height: 30px;
       border-radius: 5px;
       white-space: nowrap;
@@ -277,11 +279,12 @@
         }
 
         audio {
-            background-color: #C6CDF4;
+            background-color: rgba(109, 120, 212, 0.8);
             border-radius: 6px;
             padding: 0%;
             outline: 1px solid var(--box-outline-color);
             box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
+            filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
         }
 
         #audioPlayer {
@@ -292,7 +295,27 @@
             border: none;
         }
 
+        #track-name {
+    display: inline-block;
+    white-space: nowrap;
+    animation-delay: 2s; 
+}
 
+
+#name-text{
+    position: absolute;
+    
+    display: inline-block;
+    white-space: nowrap;
+             /* Set the text color to black */
+            font-size: 14px;
+            line-height: 50px;  /* Center text vertically */
+            margin-left: 10px;
+            display: flex;
+            overflow: hidden;
+            width: 85%;
+            color: #E9E9E9;
+}
         .tab-button.active {
             background-color: var(--tab-active-color); /* Highlight active tab */
         }
@@ -302,7 +325,7 @@
             top: 0;
             left: 100px;
             right: 20px;
-            color: black;  /* Set the text color to black */
+            color: #42489f;  /* Set the text color to black */
             font-size: 14px;
             line-height: 50px;  /* Center text vertically */
             padding: 0 10px;
@@ -323,7 +346,7 @@ margin-left: 10px;
         }
 
         audio::-webkit-media-controls-panel {
-            background-color: #C6CDF4
+            background-color: rgba(109, 120, 212, 0);
         }
 
         audio::-webkit-media-controls-current-time-display,
@@ -334,13 +357,24 @@ margin-left: 10px;
         /* Create the scrolling effect */
         #audio-text span {
             display: inline-block;
-            animation: scrollText 15s linear infinite; /* Adjust the duration for speed */
+            animation: scrollText 15s linear infinite;
+            animation-delay: 2s;  /* Adjust the duration for speed */
+        }
+        #name-text span {
+            display: inline-block;
+            
+            width: 100%; /* Ensure name-text fills the tooltip width */
+ /* Hide any overflowing text */
+  white-space: nowrap; /* Keep text on a single line */
+  display: block;  /* Adjust the duration for speed */
+ animation: scrollText 15s linear infinite;
+ animation-delay: 2s; 
         }
 
         /* Define the scrolling animation */
         @keyframes scrollText {
             from {
-                transform: translateX(100%);  /* Start off the right side */
+                transform: translateX(0%);  /* Start off the right side */
             }
             to {
                 transform: translateX(-100%);  /* End off the left side */
@@ -348,16 +382,30 @@ margin-left: 10px;
         }
 
         /* If the text is small, stop the animation */
+        
+        #name-text.no-scroll span {
+            animation: none;
+           
+        }
+
+
         #audio-text.no-scroll span {
             animation: none;
+            
         }
     </style>
 </head>
 <body>
 
     <div class="tooltip" id="tooltip">
-        Tooltip text
-        <button style="background: transparent;" onclick="alert('Tooltip button clicked!')"><img style="color: aqua;" src="icon/play.png" alt="Button Image" width="30" height="30"></button>
+
+
+        <div id="name-text">
+            <span id="track-name">Now Playing: Amazing Song Title by Artist Name - This is a really long track name that should scroll across the audio player.</span>
+        </div>
+       
+       
+       
       </div>
 
       <img id="image-overlay" src="logo/ologo.png" alt="Overlay Image">
@@ -512,7 +560,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 100); // They stay off for 300ms
 
         // Randomly schedule the next "off" flash between 5s and 10s
-        setTimeout(hideSpikesTemporarily, Math.random() * 1000 + 7000);
+        setTimeout(hideSpikesTemporarily, Math.random() * (7000 - 200) + 200);
     }
 
     hideSpikesTemporarily(); // Start the cycle
@@ -543,14 +591,18 @@ document.addEventListener("DOMContentLoaded", () => {
     <script type="module" src="index.js"></script>
     <script>
         const audioText = document.getElementById("audio-text");
+        const nameText = document.getElementById("name-text");
         const trackNameSpan = document.getElementById("track-name");
 
         // Check if text overflows and apply the scrolling effect accordingly
         function checkTextOverflow() {
             if (trackNameSpan.scrollWidth > audioText.clientWidth) {
-                audioText.classList.add("scroll");  // Enable scrolling
+                audioText.classList.add("scroll"); 
+                nameText.classList.add("scroll"); 
+                 // Enable scrolling
             } else {
-                audioText.classList.remove("scroll");  // Disable scrolling
+                audioText.classList.remove("scroll"); 
+                nameText.classList.remove("scroll");  // Disable scrolling
             }
         }
 

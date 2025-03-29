@@ -25,7 +25,7 @@ let isHoveringTooltip = false;
 
 const geometry = new THREE.SphereGeometry(98, 40, 40); // radius, width segments, height segments
 const wireframe = new THREE.WireframeGeometry(geometry);
-
+let hoverCircleSize = 2;
 // Create a line material for the wireframe
 const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  // Set opacity (range: 0 to 1)
     transparent: true });
@@ -34,8 +34,10 @@ const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  /
 const line = new THREE.LineSegments(wireframe, material);
 sphereGroup.add(line);
 
-let circleGeometry = new THREE.CircleGeometry(2, 32);
+let circleGeometry = new THREE.CircleGeometry(hoverCircleSize, 32);
 let circleMaterial = new THREE.MeshBasicMaterial({
+   
+ 
     color: 0x5967c0,  // Set color
     transparent: false,  // Make sure it's not transparent
     alphaTest: 0,  // Remove alphaTest or set to a lower value if needed
@@ -49,6 +51,34 @@ const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 3, 5);
 scene.add(light);
 scene.add(new THREE.AmbientLight(0x404040));
+
+const wireframeMaterialBlue = new THREE.LineBasicMaterial({ color: 0x0000ff }); // Blue wireframe
+
+// Define the geometry for a cube (vertices of a cube)
+const cubeGeometry = new THREE.BoxGeometry(10, 10, 10);
+
+// Convert the cube's geometry into edges for the wireframe effect
+const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
+
+// Create a line object from the edges geometry and apply the wireframe material
+const wireframeCubeObject = new THREE.LineSegments(cubeEdges, wireframeMaterialBlue);
+
+// Add the wireframe cube to the scene
+//sphereGroup.add(wireframeCubeObject);
+
+const particleTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png');
+
+const particleMaterial = new THREE.PointsMaterial({
+    map: particleTexture,
+    size: 0.9,
+    color: 0x6D78D4,
+    transparent: true,
+    alphaTest: 0.5,
+    
+});
+
+
+
 
 
 
@@ -72,17 +102,25 @@ function latLonToCartesian(lat, lon, radius) {
 }
 
 // Fetch station data
-async function fetchStationsFromLocal(limit = 500000) {
+async function fetchStationsFromAPI(limit = 500000) {
     try {
-        const response = await fetch('./stations.json'); 
+        const response = await fetch('http://localhost:3000/stations'); // Fetch from API
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
         const stations = await response.json();
-        const filteredStations = stations.filter(station => station.geo_lat && station.geo_long);
+        const filteredStations = stations.filter(station => station.state);
+
         stationsList.push(...filteredStations.slice(0, limit));
         addStationsAsParticles(); // Call function after fetching data
+
+        console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
-        console.error('Error fetching local stations:', error);
+        console.error('Error fetching stations from API:', error);
     }
 }
+
 
 let particles;
 let cityParticles; // Reference to the particle system
@@ -94,129 +132,28 @@ let cityParticleSystems = []; // Array to hold multiple particle systems
 function addStationsAsParticles() {
     if (stationsList.length === 0) return;
 
-    const clusters = [];
-    const visited = new Set();
-    const singleStationsList = [];
+   
+    const positions = new Float32Array(stationsList.length * 3);
 
-    // Function to calculate distance between two lat/lon points (Haversine formula)
-    function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth radius in km
-        const dLat = THREE.MathUtils.degToRad(lat2 - lat1);
-        const dLon = THREE.MathUtils.degToRad(lon2 - lon1);
-        const a = Math.sin(dLat / 2) ** 2 +
-                  Math.cos(THREE.MathUtils.degToRad(lat1)) * Math.cos(THREE.MathUtils.degToRad(lat2)) *
-                  Math.sin(dLon / 2) ** 2;
-        return 2 * R * Math.asin(Math.sqrt(a)); // Distance in km
-    }
-
-    // Group nearby stations
     for (let i = 0; i < stationsList.length; i++) {
-        if (visited.has(i)) continue;
-        let cluster = [stationsList[i]];
-        visited.add(i);
-
-        for (let j = 0; j < stationsList.length; j++) {
-            if (i !== j && !visited.has(j)) {
-                const d = getDistance(stationsList[i].geo_lat, stationsList[i].geo_long, 
-                                      stationsList[j].geo_lat, stationsList[j].geo_long);
-                if (d < 30) { // 50km radius
-                    cluster.push(stationsList[j]);
-                    visited.add(j);
-                }
-            }
-        }
-       
-        if (cluster.length > 1) {
-            // console.log(cluster.length);
-            
-            clusters.push(cluster);
-        } else {
-            singleStationsList.push(cluster[0]);
-        }
-    }
-
-    // Load texture
-    const textureLoader = new THREE.TextureLoader();
-    const particleTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png');
-
-    // Small station particles
-    const singlePositions = new Float32Array(singleStationsList.length * 3);
-    const singleParticleGeometry = new THREE.BufferGeometry();
-
-    for (let i = 0; i < singleStationsList.length; i++) {
-        const { geo_lat, geo_long } = singleStationsList[i];
+        const { geo_lat, geo_long } = stationsList[i];
         const position = latLonToCartesian(geo_lat, geo_long, 100.1);
 
-        singlePositions[i * 3] = position.x;
-        singlePositions[i * 3 + 1] = position.y;
-        singlePositions[i * 3 + 2] = position.z;
-
-        particleIndexMap.set(i, singleStationsList[i]); // Store index-to-station mapping
+        positions[i * 3] = position.x;
+        positions[i * 3 + 1] = position.y;
+        positions[i * 3 + 2] = position.z;
+      
+        particleIndexMap.set(i, stationsList[i]); // Store index-to-station mapping
     }
 
-    singleParticleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(singlePositions, 3));
+    const textureLoader = new THREE.TextureLoader();
 
-    const smallParticleMaterial = new THREE.PointsMaterial({
-        map: particleTexture,
-        size: 0.9,
-        transparent: true,
-        alphaTest: 0.5,
-        color: new THREE.Color(0x5967c0), // Color for particles
-    emissive: new THREE.Color(0x5967c0), // Ensure particles glow with the same color
-    blending: THREE.MultiplyBlending,
-    });
+    
 
-    particles = new THREE.Points(singleParticleGeometry, smallParticleMaterial);
+  particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    particles = new THREE.Points(particleGeometry, particleMaterial);
     sphereGroup.add(particles);
-
-    // Create city particle systems based on cluster size
-    const clusterGroups = new Map();
-    const minSize = 1;
-    const maxSize = 3;
-    const maxStations = 100;
-    for (let cluster of clusters) {
-       
-        const sizeCategory = minSize + (Math.min(cluster.length, maxStations) / maxStations) * (maxSize - minSize);
-       
-        if (!clusterGroups.has(sizeCategory)) {
-            clusterGroups.set(sizeCategory, []);
-        }
-        clusterGroups.get(sizeCategory).push(cluster[0]); // Use first station in cluster
-    }
-
-    for (let [sizeCategory, clusterPoints] of clusterGroups) {
-        const cityPositions = new Float32Array(clusterPoints.length * 3);
-        const cityParticleGeometry = new THREE.BufferGeometry();
-
-        for (let i = 0; i < clusterPoints.length; i++) {
-            const { geo_lat, geo_long } = clusterPoints[i];
-            const cityPosition = latLonToCartesian(geo_lat, geo_long, 100.1);
-
-            cityPositions[i * 3] = cityPosition.x;
-            cityPositions[i * 3 + 1] = cityPosition.y;
-            cityPositions[i * 3 + 2] = cityPosition.z;
-
-            particleIndexMap.set(i, clusterPoints[i]); // Store index-to-cluster mapping
-        }
-
-        cityParticleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(cityPositions, 3));
-
-        const cityParticleMaterial = new THREE.PointsMaterial({
-            map: particleTexture,
-            size: sizeCategory , // Scale size dynamically
-            transparent: true,
-            alphaTest: 0.5,
-            color: new THREE.Color(0x5967c0), // Color for particles
-    emissive: new THREE.Color(0x5967c0), // Ensure particles glow with the same color
-    blending: THREE.MultiplyBlending,
-        });
-
-        const cityParticleSystem = new THREE.Points(cityParticleGeometry, cityParticleMaterial);
-        cityParticleSystems.push(cityParticleSystem);
-        sphereGroup.add(cityParticleSystem);
-    }
-}
-
+}   
 
 
 
@@ -294,7 +231,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function onClick(event) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
+    let closestPoint = null;
+    let closestDistance = Infinity;
     raycaster.setFromCamera(mouse, camera);
 
     // Check all particle systems (particles and cityParticleSystems)
@@ -311,9 +249,9 @@ function onClick(event) {
                 const material = station.material;
 
                 if (material instanceof THREE.PointsMaterial) {
-                    console.log('Size before:', material.size);
+                   // console.log('Size before:', material.size);
                     material.size *= 1.2; // Increase size to indicate selection
-                    console.log('Size after:', material.size);
+                    //console.log('Size after:', material.size);
                 }
 
                 // Load the audio stream from the station URL
@@ -328,13 +266,52 @@ function onClick(event) {
                     text.textContent = station.name+" - "+station.country;
                     
                     }
+                  
+                  
+                    
                     streamSource.src = station.url;  // Set the station URL as the source
                     audioPlayer.load();             // Load the new stream URL
                     audioPlayer.play();             // Optionally, start playing automatically
-                    console.log('Now playing stream from:', station.url);
+                   // console.log('Now playing stream from:', station.url);
                 }
             }
         }
+
+        let positions;
+        if (system.geometry.attributes.position.array) {
+            positions = system.geometry.attributes.position.array;
+        } else {
+         //   console.log('No positions found for particle system');
+            continue;
+        }
+
+        let particleWorldPosition = new THREE.Vector3();
+
+        for (let i = 0; i < positions.length; i += 3) {
+            particleWorldPosition.set(positions[i] * 1.2, positions[i + 1] * 1.2, positions[i + 2] * 1.2);
+            particleWorldPosition.applyMatrix4(system.matrixWorld); // Convert to world coordinates
+
+            let distance = raycaster.ray.distanceSqToPoint(particleWorldPosition); // Squared distance check
+
+            if (distance < 1) { // Threshold for detecting a "hit"
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPoint = particleWorldPosition.clone();
+                }
+            }
+        }
+
+        if (closestPoint) {
+           // console.log("berefe  "+wireframeCubeObject.position.x +", "+wireframeCubeObject.position.y +", "+wireframeCubeObject.position.z)
+            // const jewelPosition =  latLonToCartesian(station.geo_lat, station.geo_long, 100.5);; 
+           
+           
+            wireframeCubeObject.position.copy(closestPoint);
+          //  console.log("aftere  " +wireframeCubeObject.position.x +", "+wireframeCubeObject.position.y +", "+wireframeCubeObject.position.z)
+        
+        }
+
+
     }
 }
 
@@ -358,13 +335,13 @@ let previousMousePosition = { x: 0, y: 0 };
 
 function onWheel(event) {
     targetZ += event.deltaY * zoomSpeed;
-    targetZ = Math.max(130, Math.min(230, targetZ));
+    targetZ = Math.max(105, Math.min(230, targetZ));
 }
 
 function onMouseDown(event) {
   
     const canvas = renderer.domElement;
-console.log(canvas);
+//console.log(canvas);
     // Check if the clicked element is NOT the box or the drag handle
     if (event.target == canvas) {
         isDragging = true;
@@ -391,20 +368,55 @@ function onMouseMoveRaycast(event) {
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     const button = document.getElementById("tooltip-btn");
     const tooltip = document.getElementById("tooltip");
-   
+    const nameText = document.getElementById("track-name");
     raycaster.setFromCamera(mouse, camera);
     let closestDistance = Infinity;
     let closestPoint = null;
 
     // Check all particle systems (particles and cityParticleSystems)
-    const allParticles = [particles, ...cityParticleSystems]; // Combine single and city particle systems
+    const allParticles = [particles, ...cityParticleSystems]; // does this  Combine single and city particle systems
 
     for (let system of allParticles) {
+
+        if (system && system.geometry && system.geometry.attributes.position) {
+            const intersects = raycaster.intersectObject(system);
+            
+
+       if (intersects.length > 0) {
+            const index = intersects[0].index; // Get the index of the clicked particle
+            const station = particleIndexMap.get(index);
+            if (station) {
+                nameText.style.animation = 'none';
+
+// Force reflow/repaint (this ensures the change is applied)
+nameText.offsetHeight;  // Trigger a reflow (read a property)
+
+nameText.style.animationDelay = '2s';
+nameText.style.animation = 'scrollText 15s linear infinite';
+
+
+                if(station.state){
+                    nameText.textContent = station.name+" - "+station.state+", "+station.country;
+                }else{
+                    nameText.textContent = station.name+" - "+station.country;
+                
+                }
+
+                
+                   // console.log('asdasdasda:');
+            } 
+        }
+        } else {
+            //console.log('Skipping invalid system:', system);
+        }
+
+
+
         let positions;
         if (system.geometry.attributes.position.array) {
             positions = system.geometry.attributes.position.array;
         } else {
-            console.log('No positions found for particle system');
+           // console.log('No positions found for particle system');
             continue;
         }
 
@@ -416,7 +428,7 @@ function onMouseMoveRaycast(event) {
 
             let distance = raycaster.ray.distanceSqToPoint(particleWorldPosition); // Squared distance check
 
-            if (distance < 0.5) { // Threshold for detecting a "hit"
+            if (distance < 1) { // Threshold for detecting a "hit"
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestPoint = particleWorldPosition.clone();
@@ -426,17 +438,34 @@ function onMouseMoveRaycast(event) {
     }
 
     if (closestPoint) {
+        
+        document.body.style.cursor = 'pointer';
         hoverCircle.position.copy(closestPoint);
-        hoverCircle.position.z +=1;
+        hoverCircle.position.z;
         hoverCircle.visible = true;
-        const offsetX = 0; // Distance from cursor (horizontal)
-        const offsetY = -15; // Distance from cursor (vertical)
+        const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    let offsetX = -326;  // Default horizontal offset
+    let offsetY = -55; // Default vertical offset
+
+    // Check which half of the screen the cursor is on
+    if (event.clientX > screenWidth / 2) {
+        // Right half of the screen
+        offsetX = 10; // Adjust horizontal offset for the right side
+        offsetY = -55; // Optionally adjust vertical offset for the right side
+    } else {
+        // Left half of the screen
+        offsetX = -306; // Default or change it to your preference for the left side
+        offsetY = -55; // Optionally adjust for the left side
+    }
   
         tooltip.style.left = `${event.pageX + offsetX}px`;
         tooltip.style.top = `${event.pageY + offsetY}px`;
         tooltip.style.visibility = "visible";
         tooltip.style.opacity = "1";
     } else {
+        document.body.style.cursor = 'default';
         hoverCircle.visible = false;
         tooltip.style.visibility = "hidden";
         tooltip.style.opacity = "0";
@@ -444,7 +473,7 @@ function onMouseMoveRaycast(event) {
 
 
     tooltip.addEventListener("mouseenter", () => {
-        console.log("jhiji");
+       // console.log("jhiji");
         isHoveringTooltip = true;
       });
   
@@ -476,8 +505,39 @@ function animate() {
    if(hoverCircle.visible == false){
     sphereGroup.rotation.y += 0.001;
    }
+
+   const minSize = 0.2;
+   const maxSize = 0.8;
+
+   // Get the camera's Z position (assuming movement along the Z-axis)
+  
+
+  
+
+   // Normalize the camera position to a 0-1 range
+   let t = (camera.position.z - 110) / (230 - 130);
+
+   // Interpolate size between minSize and maxSize
+   particleMaterial.size = minSize + t * (maxSize - minSize);
+
+
+   const minSizeHover = 0.2;
+   const maxSizeHover = 2;
+
+   // Get the camera's Z position (assuming movement along the Z-axis)
+  
+
+  
+   
+   // Normalize the camera position to a 0-1 range
+
+
+   // Interpolate size between minSize and maxSize
+   let newCircleSize = minSizeHover + t * (maxSizeHover - minSizeHover);
+   hoverCircle.geometry.dispose();
+   hoverCircle.geometry = new THREE.CircleGeometry(newCircleSize, 32);
     renderer.render(scene, camera);
 }
 
-fetchStationsFromLocal(500000);
+fetchStationsFromAPI(500000);
 animate();
