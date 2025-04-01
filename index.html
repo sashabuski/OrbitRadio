@@ -251,7 +251,7 @@
             top: 10px;
             left: 10px;
             height: 20vh; 
-             filter: drop-shadow(0 0px 2px rgba(109, 120, 212, 0.8));
+            filter: drop-shadow(0 0px 2px rgba(109, 120, 212, 0.8));
             z-index: 0;
 
         }
@@ -265,6 +265,41 @@
     filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
     z-index: 0;
 }
+
+
+
+
+.anchored-bottom-center {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            width: 700px;
+            height: 70px;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .button-img {
+            width: 60px; /* Adjust button size */
+            height: 50px;
+            padding: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%)  drop-shadow(0 0px 5px rgba(71, 78, 166, 0.8));;
+           
+        }
+    
+        
+
+        .button-img:hover {
+            transform: scale(1.1);
+        }
 
         /* Position the audio container at the bottom center */
         #audio-container {
@@ -436,14 +471,12 @@ margin-left: 10px;
       <img class="image-overlay2" src="logo/eye4.png" alt="Overlay Image">
     
     
-    <div id="audio-container">
-        <audio id="audioPlayer" controls>
-            <source id = "streamSource" src="streamSource" type="audio/mpeg">
-            Your browser does not support the audio element.
-        </audio>
-        <div id="audio-text">
-            <span id="track-name">Now Playing: Amazing Song Title by Artist Name - This is a really long track name that should scroll across the audio player.</span>
-        </div>
+      <div class="anchored-bottom-center"><h2 style="position: fixed; margin-bottom: 140px; font-size: 13px; color: #6D78D4;"> Jungle Radio 85.34FM - Genoa, Italy</h2>
+        <img src="audioplayericons/volume.svg" style="height: 37px" alt="Button V" class="button-img">
+        <img src="audioplayericons/back.svg" alt="Button 1" class="button-img">
+        <img src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
+        <img src="audioplayericons/next.svg" alt="Button 3" class="button-img">
+        <img src="audioplayericons/heart2.svg" style="height: 35px;" alt="Button 4" class="button-img">
     </div>
 
 
