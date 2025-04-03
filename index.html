@@ -65,7 +65,7 @@
     
     .tooltip {
       position: absolute;
-      background-color: rgba(109, 120, 212, 0.8);;
+      background-color: rgba(109, 120, 212);;
       box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
       filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
       color: white;
@@ -288,10 +288,10 @@
         .button-img {
             width: 60px; /* Adjust button size */
             height: 50px;
-            padding: 12px;
+            padding: 2px;
             cursor: pointer;
             transition: transform 0.2s;
-            filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%)  drop-shadow(0 0px 5px rgba(71, 78, 166, 0.8));;
+            filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%)  drop-shadow(0 0px 2px rgba(71, 78, 166, 0.8));;
            
         }
     
@@ -301,40 +301,9 @@
             transform: scale(1.1);
         }
 
-        /* Position the audio container at the bottom center */
-        #audio-container {
-            position: absolute;
-            bottom: 2%; /* Adjust the distance from the bottom */
-            left: 50%;
-            transform: translateX(-50%); /* Center horizontally */
-            width: 300px;  /* Adjust width as needed */
-            height: 50px;  /* Adjust height as needed */
-            border-radius: 1px;
+       
 
-        }
 
-        audio {
-            background-color: rgba(109, 120, 212, 0.8);
-            border-radius: 6px;
-            padding: 0%;
-            outline: 1px solid var(--box-outline-color);
-            box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
-            filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
-        }
-
-        #audioPlayer {
-            width: 100%;
-            height: 100%;
-            /* Transparent background with 50% alpha */
-            
-            border: none;
-        }
-
-        #track-name {
-    display: inline-block;
-    white-space: nowrap;
-    animation-delay: 2s; 
-}
 
 
 #name-text{
@@ -355,19 +324,105 @@
             background-color: var(--tab-active-color); /* Highlight active tab */
         }
 
-        #audio-text {
-            position: absolute;
-            top: 0;
-            left: 100px;
-            right: 20px;
-            color: #42489f;  /* Set the text color to black */
-            font-size: 14px;
-            line-height: 50px;  /* Center text vertically */
-            padding: 0 10px;
-            white-space: nowrap;
-            overflow: hidden;
+
+
+      
+
+        @keyframes scrollText {
+            from {
+                transform: translateX(0%);  /* Start off the right side */
+            }
+            to {
+                transform: translateX(-100%);  /* End off the left side */
+            }
         }
 
+        #track-name {
+    display: inline-block;
+    white-space: nowrap;
+    animation-delay: 2s;
+    z-index: 1; 
+}
+
+#audio-text {
+            position: fixed;
+           bottom:75px;
+            width: 300px; /* Fixed width */
+            height: 40px; /* Fixed height */
+            overflow: hidden; /* Hide overflowing text */
+            display: flex;
+            align-items: center;
+            color: #42489f; 
+            font-size: 14px;
+            justify-content: center;
+            transition: justify-content 0.3s ease;
+
+        }
+
+        #station-name {
+            display: inline-block;
+            white-space: nowrap;
+            position: relative;
+            z-index: 1; /* Ensure text is below the fade effect */
+           
+          
+        }
+        @keyframes firstScroll {
+            0% { transform: translateX(0%); }  /* Start centered */
+            100% { transform: translateX(-100%); }  /* Move fully left */
+        }
+
+        /* Looping animation (restarts from the right) */
+        @keyframes loopScroll {
+            0% { transform: translateX(100%); } /* Restart off-screen */
+            100% { transform: translateX(-100%); } /* Move off-screen */
+        }
+
+        /* Fade effect */
+        #name-text::before,
+        #name-text::after {
+            content: "";
+            position: absolute;
+            width: 5px; /* Width of fade effect */
+            height: 100%;
+            top: 0;
+            pointer-events: none; /* Prevent interaction blocking */
+            z-index: 2; /* Ensure the gradients are above the text */
+        }
+
+        #name-text::before {
+            left: 0;
+            background: linear-gradient(to right, rgba(109, 120, 212), transparent);
+        }
+
+        #name-text::after {
+            right: 0;
+            background: linear-gradient(to left, rgba(109, 120, 212 ), transparent);
+        }
+
+
+        #audio-text::before,
+        #audio-text::after {
+            content: "";
+            position: absolute;
+            width: 10px; /* Width of fade effect */
+            height: 100%;
+            top: 0;
+            pointer-events: none; /* Prevent interaction blocking */
+            z-index: 2; /* Ensure the gradients are above the text */
+        }
+
+        #audio-text::before {
+            left: 0;
+            background: linear-gradient(to right, #E9E9E9, transparent);
+        }
+
+        #audio-text::after {
+            right: 0;
+            background: linear-gradient(to left, #E9E9E9, transparent);
+        }
+
+       
         .no-hover:hover {
     background-color: #E9E9E9; /* or any other value that removes hover effect */
     cursor: default;
@@ -390,31 +445,13 @@ margin-left: 10px;
             display: none;
         }
         /* Create the scrolling effect */
-        #audio-text span {
-            display: inline-block;
-            animation: scrollText 15s linear infinite;
-            animation-delay: 2s;  /* Adjust the duration for speed */
-        }
-        #name-text span {
-            display: inline-block;
-            
-            width: 100%; /* Ensure name-text fills the tooltip width */
- /* Hide any overflowing text */
-  white-space: nowrap; /* Keep text on a single line */
-  display: block;  /* Adjust the duration for speed */
- animation: scrollText 15s linear infinite;
- animation-delay: 2s; 
-        }
+       
+       
 
         /* Define the scrolling animation */
-        @keyframes scrollText {
-            from {
-                transform: translateX(0%);  /* Start off the right side */
-            }
-            to {
-                transform: translateX(-100%);  /* End off the left side */
-            }
-        }
+     
+
+        
 
         /* If the text is small, stop the animation */
         
@@ -424,10 +461,7 @@ margin-left: 10px;
         }
 
 
-        #audio-text.no-scroll span {
-            animation: none;
-            
-        }
+      
     </style>
 </head>
 <body>
@@ -470,13 +504,18 @@ margin-left: 10px;
       <img class="image-overlay2" src="logo/eye3.png" alt="Overlay Image">
       <img class="image-overlay2" src="logo/eye4.png" alt="Overlay Image">
     
-    
-      <div class="anchored-bottom-center"><h2 style="position: fixed; margin-bottom: 140px; font-size: 13px; color: #6D78D4;"> Jungle Radio 85.34FM - Genoa, Italy</h2>
-        <img src="audioplayericons/volume.svg" style="height: 37px" alt="Button V" class="button-img">
-        <img src="audioplayericons/back.svg" alt="Button 1" class="button-img">
-        <img src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
-        <img src="audioplayericons/next.svg" alt="Button 3" class="button-img">
-        <img src="audioplayericons/heart2.svg" style="height: 35px;" alt="Button 4" class="button-img">
+      
+      <div class="anchored-bottom-center">
+        
+        <div id="audio-text">
+            <span id="station-name">Please, select a station.</span>
+        </div>
+        
+        <img id="volume-btn" src="audioplayericons/volume.svg" style="height: 37px" alt="Button V" class="button-img">
+        <img id="prev-btn" src="audioplayericons/back.svg" alt="Button 1" class="button-img">
+        <img id="play-btn" src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
+        <img id="next-btn" src="audioplayericons/next.svg" alt="Button 3" class="button-img">
+        <img id="favorite-btn" src="audioplayericons/heart5.svg" style="height: 35px;" alt="Button 4" class="button-img">
     </div>
 
 
@@ -538,6 +577,11 @@ margin-left: 10px;
         </div>
         <div class="resizer" id="resizer"></div>
       </div>
+
+      <script>
+       
+
+    </script>
     <script>
 document.addEventListener("DOMContentLoaded", () => {
     const randomImages = document.querySelectorAll(".image-overlay2:not(.orbit-letter)");
@@ -621,20 +665,21 @@ document.addEventListener("DOMContentLoaded", () => {
     
     showTab(1);
 </script>
+
     <script type="module" src="index.js"></script>
     <script>
         const audioText = document.getElementById("audio-text");
         const nameText = document.getElementById("name-text");
         const trackNameSpan = document.getElementById("track-name");
-
+        const stationText = document.getElementById("station-name");
         // Check if text overflows and apply the scrolling effect accordingly
         function checkTextOverflow() {
             if (trackNameSpan.scrollWidth > audioText.clientWidth) {
-                audioText.classList.add("scroll"); 
+               
                 nameText.classList.add("scroll"); 
                  // Enable scrolling
             } else {
-                audioText.classList.remove("scroll"); 
+              
                 nameText.classList.remove("scroll");  // Disable scrolling
             }
         }

@@ -33,10 +33,10 @@ const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  /
 // Create a mesh for the wireframe lines
 const line = new THREE.LineSegments(wireframe, material);
 sphereGroup.add(line);
-
+let currentStation;
 let circleGeometry = new THREE.CircleGeometry(hoverCircleSize, 32);
 let circleMaterial = new THREE.MeshBasicMaterial({
-   
+
  
     color: 0x5967c0,  // Set color
     transparent: false,  // Make sure it's not transparent
@@ -79,7 +79,11 @@ const particleMaterial = new THREE.PointsMaterial({
 
 
 
-
+const text = document.getElementById("station-name");
+const playBtn = document.getElementById("play-btn");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const volumeBtn = document.getElementById("volume-btn");
 
 
 
@@ -226,6 +230,108 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// Assume these are the global variables that hold the current stream and station info
+
+
+const audioPlayer = new Audio(); // Create an audio player instance
+
+
+
+
+
+// Elements
+
+
+function updatePlayer(station) {
+   
+  
+    
+   let textContent = station.state ? `${station.name} - ${station.state}, ${station.country}` : `${station.name} - ${station.country}`;
+   updatePlayerText(textContent);
+    audioPlayer.src = station.url;  // Set the station URL as the source
+    audioPlayer.load();             // Load the new stream URL
+    audioPlayer.play();   
+    
+    playBtn.src = "audioplayericons/pause.svg";// Start playing automatically
+}
+
+// Play/Pause toggle
+function togglePlay() {
+   
+    console.log("dhasgdkjashd"+currentStation);
+    if (audioPlayer.paused) {
+        audioPlayer.play();
+        playBtn.src = "audioplayericons/pause.svg"; // Assuming you have a pause icon
+    } else {
+        audioPlayer.pause();
+        playBtn.src = "audioplayericons/play.svg";
+    }
+}
+
+// Next Station
+function nextStation() {
+    currentStationIndex = (currentStationIndex + 1) % stations.length;
+    updatePlayer(stations[currentStationIndex]);
+}
+
+// Previous Station
+function prevStation() {
+    currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length;
+    updatePlayer(stations[currentStationIndex]);
+}
+
+// Volume Control (Example of mute/unmute or volume adjustment)
+function toggleVolume() {
+    if (audioPlayer.muted) {
+        audioPlayer.muted = false;
+        volumeBtn.src = "audioplayericons/volume.svg"; // Normal volume icon
+    } else {
+        audioPlayer.muted = true;
+        volumeBtn.src = "audioplayericons/mute.svg"; // Mute icon
+    }
+}
+
+// Initialize the first station
+
+
+// Add event listeners to buttons
+playBtn.addEventListener("click", togglePlay);
+nextBtn.addEventListener("click", nextStation);
+prevBtn.addEventListener("click", prevStation);
+volumeBtn.addEventListener("click", toggleVolume);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Raycasting for click detection
 
 function onClick(event) {
@@ -256,22 +362,13 @@ function onClick(event) {
 
                 // Load the audio stream from the station URL
                 if (station.url) {
-                    const audioPlayer = document.getElementById("audioPlayer");
-                    const streamSource = document.getElementById("streamSource");
-                    const text = document.getElementById("track-name");
-                    
-                    if(station.state){
-                        text.textContent = station.name+" - "+station.state+", "+station.country;
-                    }else{
-                    text.textContent = station.name+" - "+station.country;
-                    
-                    }
-                  
                   
                     
-                    streamSource.src = station.url;  // Set the station URL as the source
-                    audioPlayer.load();             // Load the new stream URL
-                    audioPlayer.play();             // Optionally, start playing automatically
+                  
+                    updatePlayer(station)
+                    currentStation = station;
+                    // Set the station URL as the source
+                             // Optionally, start playing automatically
                    // console.log('Now playing stream from:', station.url);
                 }
             }
@@ -463,6 +560,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         tooltip.style.left = `${event.pageX + offsetX}px`;
         tooltip.style.top = `${event.pageY + offsetY}px`;
         tooltip.style.visibility = "visible";
+        startScrolling2();
         tooltip.style.opacity = "1";
     } else {
         document.body.style.cursor = 'default';
@@ -539,5 +637,121 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+
+
+
+let loopTimeout;
+
+
+
+function startScrolling2() {
+    const textElement = document.getElementById("track-name");
+    const container = document.getElementById("name-text");
+
+    const textWidth = textElement.offsetWidth; 
+    const containerWidth = container.offsetWidth;
+
+    // Clear any existing timeout to prevent looping when it shouldn't
+    clearTimeout(loopTimeout);
+
+    if (textWidth <= containerWidth) {
+        // If text fits, center it, remove animation & padding
+        container.style.justifyContent = "center";
+        textElement.style.animation = "none";
+        textElement.style.transform = "translateX(0%)";
+        textElement.style.paddingLeft = "0px"; // Remove padding
+        return;
+    }
+
+    // If text is too long, remove centering, enable scrolling & add padding
+    container.style.justifyContent = "flex-start";
+    textElement.style.paddingLeft = "5px"; // Add padding
+
+    const distance = textWidth + containerWidth; 
+    const speed = 50; // Pixels per second
+    const duration = distance / speed; 
+
+    // Clear any existing animation
+    textElement.style.animation = "none";
+    textElement.offsetHeight; // Force reflow (triggers reapplication of animation)
+    
+    // First animation (with 2s delay)
+    textElement.style.animation = `firstScroll ${duration}s linear forwards`;
+    textElement.style.animationDelay = "2s";
+
+    loopTimeout = setTimeout(() => {
+        // Start the loop animation only after the first scroll completes
+        textElement.style.animation = `loopScroll ${duration}s linear infinite`;
+    }, (duration + 2) * 1000); // First animation time + 2s delay
+}
+
+function updateTooltipText(newText) {
+    const textElement = document.getElementById("track-name");
+    textElement.innerText = newText; // Update the text
+
+    // Restart the animation after text update
+    startScrolling2();
+}
+window.onload = startScrolling2;
+window.onresize = startScrolling2;
+
+
+
+
+
+function startScrolling1() {
+    const textElement = document.getElementById("station-name");
+    const container = document.getElementById("audio-text");
+
+    const textWidth = textElement.offsetWidth; 
+    const containerWidth = container.offsetWidth;
+
+    // Clear any existing timeout to prevent looping when it shouldn't
+    clearTimeout(loopTimeout);
+
+    if (textWidth <= containerWidth) {
+        // If text fits, center it, remove animation & padding
+        container.style.justifyContent = "center";
+        textElement.style.animation = "none";
+        textElement.style.transform = "translateX(0%)";
+        textElement.style.paddingLeft = "0px"; // Remove padding
+        return;
+    }
+
+    // If text is too long, remove centering, enable scrolling & add padding
+    container.style.justifyContent = "flex-start";
+    textElement.style.paddingLeft = "20px"; // Add padding
+
+    const distance = textWidth + containerWidth; 
+    const speed = 50; // Pixels per second
+    const duration = distance / speed; 
+
+    // Clear any existing animation
+    textElement.style.animation = "none";
+    textElement.offsetHeight; // Force reflow (triggers reapplication of animation)
+    
+    // First animation (with 2s delay)
+    textElement.style.animation = `firstScroll ${duration}s linear forwards`;
+    textElement.style.animationDelay = "2s";
+
+    loopTimeout = setTimeout(() => {
+        // Start the loop animation only after the first scroll completes
+        textElement.style.animation = `loopScroll ${duration}s linear infinite`;
+    }, (duration + 2) * 1000); // First animation time + 2s delay
+}
+
+function updatePlayerText(newText) {
+    const textElement = document.getElementById("station-name");
+    textElement.innerText = newText; // Update the text
+
+    // Restart the animation after text update
+    startScrolling1();
+}
+
+window.onload = startScrolling1;
+window.onresize = startScrolling1;
+
+
+export { currentStation };
 fetchStationsFromAPI(500000);
 animate();
