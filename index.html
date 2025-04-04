@@ -331,11 +331,16 @@
            
         }
     
-        
 
         .button-img:hover {
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
+
+
+        .button-img:active {
+      
+      transform: scale(1);
+    }
 
        
 
@@ -538,6 +543,86 @@ margin-left: 10px;
     opacity: 0; /* Hidden */
 }
 
+
+.volume-container {
+      position: relative;
+    }
+
+   
+    .volume-btn {
+      font-size: 2rem;
+      padding: 10px;
+      border: none;
+      width: 37px;
+      height: 37px;
+      background: transparent;
+      background-image: url('audioplayericons/volume.svg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      border-radius: 5px;
+      cursor: pointer;
+      filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%) drop-shadow(0 0px 2px rgba(71, 78, 166, 0.8));
+      transition: transform 0.2s ease, filter 0.5s ease;
+    }
+
+    /* Hover effect */
+    .volume-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Press effect overrides hover */
+    .volume-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* Optional: Muted icon */
+    .volume-btn.muted {
+      background-image: url('audioplayericons/mute.svg');
+    }
+    .volume-slider-popup {
+      position: absolute;
+      top: 7px;
+    left: 50px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .volume-container:hover .volume-slider-popup {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .volume-slider {
+      width: 200px;
+      cursor: pointer;
+      appearance: none;
+      background: #ccc;
+      height: 4px;
+      border-radius: 2px;
+      
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      background: rgba(109, 120, 212, 0.8);
+      filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%)  drop-shadow(0 0px 2px rgba(71, 78, 166, 0.8));;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: rgba(164,177,255, 0.5);
+      filter: drop-shadow(0 0px 7px rgba(71, 78, 166, 0.8));
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
       
     </style>
 
@@ -594,17 +679,33 @@ margin-left: 10px;
             <span id="station-name">Please, select a station.</span>
         </div>
         
-        <img id="volume-btn" src="audioplayericons/volume.svg" style="height: 37px" alt="Button V" class="button-img">
-        <img id="prev-btn" src="audioplayericons/back.svg" alt="Button 1" class="button-img">
-        <img id="play-btn" src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
-        <img id="next-btn" src="audioplayericons/next.svg" alt="Button 3" class="button-img">
-        <!--<img id="favorite-btn" class="heart-btn button-img" src="audioplayericons/heart5.svg" style="height: 35px;" alt="Button 4" >-->
         <button  id="favorite-btn" class="heart-button heart-btn button-img">
             <svg class="heart-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
         </button>
+        <img id="prev-btn" src="audioplayericons/back.svg" alt="Button 1" class="button-img">
+        <img id="play-btn" src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
+        <img id="next-btn" src="audioplayericons/next.svg" alt="Button 3" class="button-img">
+        <!--<img id="favorite-btn" class="heart-btn button-img" src="audioplayericons/heart5.svg" style="height: 35px;" alt="Button 4" >
+       
+        <img id="volume-btn" src="audioplayericons/volume.svg" style="height: 37px" alt="Button V" class="button-img">-->
     
+        <div class="volume-container">
+            <button id="volume-btn" class="volume-btn" ></button>
+            <div class="volume-slider-popup">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+                class="volume-slider"
+                id="volume-slider"
+                background = "red"
+              />
+            </div>
+        </div>
+
     </div>
 
 
@@ -666,9 +767,26 @@ margin-left: 10px;
       </div>
 
       <script>
-       
+        const volumeSlider = document.getElementById("volume-slider");
+    
+        volumeSlider.addEventListener("input", (e) => {
+          const volume = e.target.value;
+          console.log(`Volume: ${volume}`);
+    
+    
+        });
+    
+    
+        const slider = document.getElementById("volume-slider");
+        const value = slider.value;
+        slider.style.background = `linear-gradient(to right, rgba(120, 132, 225, 1) ${value}%, #c8d1ff ${value}%)`;
 
-    </script>
+
+    slider.addEventListener("input", function () {
+      const value = this.value;
+      this.style.background = `linear-gradient(to right, rgba(120, 132, 225, 1) ${value}%, #c8d1ff ${value}%)`;
+    });
+      </script>
     <script>
 document.addEventListener("DOMContentLoaded", () => {
     const randomImages = document.querySelectorAll(".image-overlay2:not(.orbit-letter)");

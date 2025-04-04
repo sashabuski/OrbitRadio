@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-
+const audioPlayer = new Audio();
+audioPlayer.volume = 0.5;
 const stationsList = [];
 const singleStationsList = [];
 const particleIndexMap = new Map();
@@ -52,12 +53,12 @@ const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 3, 5);
 scene.add(light);
 scene.add(new THREE.AmbientLight(0x404040));
-
+const volumeSlider = document.getElementById("volume-slider");
 const wireframeMaterialBlue = new THREE.LineBasicMaterial({ color: 0x0000ff }); // Blue wireframe
 
 // Define the geometry for a cube (vertices of a cube)
 const cubeGeometry = new THREE.BoxGeometry(10, 10, 10);
-
+let preMuteValue;
 // Convert the cube's geometry into edges for the wireframe effect
 const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
 
@@ -246,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Assume these are the global variables that hold the current stream and station info
 
 
-const audioPlayer = new Audio(); // Create an audio player instance
+ // Create an audio player instance
 
 
 
@@ -297,10 +298,16 @@ function prevStation() {
 function toggleVolume() {
     if (audioPlayer.muted) {
         audioPlayer.muted = false;
-        volumeBtn.src = "audioplayericons/volume.svg"; // Normal volume icon
+        volumeSlider.value = preMuteValue;
+        volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+        volumeBtn.classList.remove('muted'); 
+        // Normal volume icon
     } else {
         audioPlayer.muted = true;
-        volumeBtn.src = "audioplayericons/mute.svg"; // Mute icon
+       preMuteValue = volumeSlider.value;
+        volumeSlider.value = 0;
+        volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
+        volumeBtn.classList.add('muted');
     }
 }
 
@@ -780,7 +787,7 @@ function updateFavoritesList() {
             // Apply styles if this station is the current station
             if (currentStation && station.name === currentStation.name) {
                 listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#C68EFD";
+                listItem.style.color = "#d896ed";
             }
 
             listItem.addEventListener("click", () => {
@@ -1009,7 +1016,14 @@ function toggleButtonVisibility() {
 // Call the function to update button visibility
 
 
+
+
+volumeSlider.addEventListener("input", () => {
+    audioPlayer.volume = volumeSlider.value / 100;
+});
 //clearAllCookies();
+
+
 
 toggleButtonVisibility();
 
