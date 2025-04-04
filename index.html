@@ -201,31 +201,67 @@
       padding-left: 10px;
       padding-right: 10px;
       transition: color 0.1s ease, color 0.1s ease;
+      display: flex;
+            justify-content: space-between;
+            align-items: center;
     
     }
 
-    .border-container {
+
+    .remove-btn {
+        transition: transform 0.2s;    
+        margin-left: 10px;
+            background-color: transparent;
+            border: none;
+            transition: filter 0.2s ease;
+            font-size: 16px;
+            cursor: pointer;
+            position: relative;
+            right:10px;
+            background-image: url('x.svg');
+            background-size: contain;  /* Ensure the icon fits inside the button */
+    background-repeat: no-repeat;
+    background-position: center;
+            top:0px;
+            height: 18px;
+            width: 18px;
+            filter: invert(49%) sepia(84%) saturate(334%) hue-rotate(196deg) brightness(85%) contrast(97%);
+        }
+  .border-container {
   width: 100%; /* Adjust length */
   border-bottom: 1px solid #6D78D4;
   margin: 0 auto; /* Centers the border */
   padding-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 0px;
+    margin-right: 0px;
 }
 
+
+.locationtext { 
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 13px;
+      
+    }
     .list-item:hover {
-    background-color: #6D78D4; /* Light grey background on hover */
-    cursor: pointer; /* Change cursor to indicate interactivity */
+    background-color: #6D78D4;
+    cursor: pointer;
     color: #E9E9E9;
 }
 
-    .locationtext {
-      
+/* Remove button changes when list item is hovered */
+.list-item:hover .remove-btn {
+    filter: invert(99%) sepia(10%) saturate(98%) hue-rotate(162deg) brightness(120%) contrast(83%);
+}
+
+.remove-btn:hover {
     
-      
-    margin-top: 0px;
-    margin-bottom: 0px;
-     font-size: 13px;
-      
-    }
+    transform: scale(1.05);
+    filter: invert(17%) sepia(78%) saturate(1213%) hue-rotate(221deg) brightness(91%) contrast(115%);
+}
 
     /* Hidden class for inactive tabs */
     .hidden {
@@ -400,6 +436,11 @@
             background: linear-gradient(to left, rgba(109, 120, 212 ), transparent);
         }
 
+        #favorite-btn:disabled {
+    opacity: 0.5; /* Makes button semi-transparent when disabled */
+    pointer-events: none; /* Disables all mouse interactions (including hover) */
+}
+
 
         #audio-text::before,
         #audio-text::after {
@@ -461,8 +502,50 @@ margin-left: 10px;
         }
 
 
+        .heart-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+        .heart-button:active {
+            transform: scale(1.2); /* Scales the heart when clicked */
+        }
+        .heart-svg {
+            width: 37px;
+            height: 37px;
+            fill: transparent;
+            stroke: rgba(109, 120, 212, 0.8);;
+            stroke-width: 2;
+            transition: fill 0.5s ease, stroke 0.5s ease;
+        }
+        .heart-button.filled .heart-svg {
+            fill: rgba(109, 120, 212, 0.8);;
+            stroke: rgba(109, 120, 212, 0.8);;
+        }
+    
+        #favorite-btn {
+    transition: opacity 1s ease;
+    opacity: 1; /* Initially visible */
+}
+
+#favorite-btn.hidden {
+    opacity: 0; /* Hidden */
+}
+
       
     </style>
+
+<script>
+    function toggleHeart(button) {
+        button.classList.toggle('filled');
+    }
+</script>
 </head>
 <body>
 
@@ -515,7 +598,13 @@ margin-left: 10px;
         <img id="prev-btn" src="audioplayericons/back.svg" alt="Button 1" class="button-img">
         <img id="play-btn" src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
         <img id="next-btn" src="audioplayericons/next.svg" alt="Button 3" class="button-img">
-        <img id="favorite-btn" src="audioplayericons/heart5.svg" style="height: 35px;" alt="Button 4" class="button-img">
+        <!--<img id="favorite-btn" class="heart-btn button-img" src="audioplayericons/heart5.svg" style="height: 35px;" alt="Button 4" >-->
+        <button  id="favorite-btn" class="heart-button heart-btn button-img">
+            <svg class="heart-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+        </button>
+    
     </div>
 
 
@@ -537,9 +626,7 @@ margin-left: 10px;
         <div class="content">
           <div id="tab-1" class="tab-content">
             <ul class="list">
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-              <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+            
             </ul>
           </div>
           <div id="tab-2" class="tab-content hidden">

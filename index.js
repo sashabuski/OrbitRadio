@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+
 const stationsList = [];
 const singleStationsList = [];
 const particleIndexMap = new Map();
@@ -22,7 +23,7 @@ scene.background = new THREE.Color(0xE9E9E9);
 const textureLoader = new THREE.TextureLoader();
 const earthTexture = textureLoader.load('map2.jpg');
 let isHoveringTooltip = false; 
-
+let favorites;
 const geometry = new THREE.SphereGeometry(98, 40, 40); // radius, width segments, height segments
 const wireframe = new THREE.WireframeGeometry(geometry);
 let hoverCircleSize = 2;
@@ -365,8 +366,11 @@ function onClick(event) {
                   
                     
                   
-                    updatePlayer(station)
+                    updatePlayer(station);
                     currentStation = station;
+                    toggleButtonVisibility();
+                    updateFavoritesList();
+                    wrangleHeart();
                     // Set the station URL as the source
                              // Optionally, start playing automatically
                    // console.log('Now playing stream from:', station.url);
@@ -752,6 +756,262 @@ window.onload = startScrolling1;
 window.onresize = startScrolling1;
 
 
-export { currentStation };
+/*FAVOURITES SECTION
+*
+*
+*
+*
+*
+*/
+
+function updateFavoritesList() {
+    favorites = getFavoriteStations(); // Retrieve favorite stations from localStorage or cookies
+    const favoritesList = document.querySelector("#tab-1 .list"); // Select the list inside your tab
+
+    favoritesList.innerHTML = ''; // Clear the existing list before updating
+
+    favorites.forEach(station => {
+        // Ensure all required data exists and is not empty
+        if (station && station.name && station.state && station.country) {
+            // Create list item
+            const listItem = document.createElement("li");
+            listItem.classList.add("list-item");
+
+            // Apply styles if this station is the current station
+            if (currentStation && station.name === currentStation.name) {
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#C68EFD";
+            }
+
+            listItem.addEventListener("click", () => {
+                updatePlayer(station);
+                currentStation = station;
+                updateFavoritesList(); 
+                toggleButtonVisibility();
+                wrangleHeart();
+            });
+
+            // Create a container for border control
+            const contentWrapper = document.createElement("div");
+            contentWrapper.classList.add("border-container");
+
+            // Create a div to wrap the text
+            const textWrapper = document.createElement("div");
+
+            // Create station name text
+            const stationName = document.createTextNode(station.name);
+            textWrapper.appendChild(stationName);
+
+            // Create h2 element for state and country
+            const locationText = document.createElement("h2");
+            locationText.classList.add("locationtext");
+            locationText.textContent = `${station.state}, ${station.country}`;
+
+            textWrapper.appendChild(locationText);
+
+            // Create "X" button for removal
+            const removeButton = document.createElement("button");
+            removeButton.classList.add("remove-btn");
+            removeButton.addEventListener("click", () => removeFavorite(station));
+
+            // Append text and button to the content wrapper
+            contentWrapper.appendChild(textWrapper);
+            contentWrapper.appendChild(removeButton);
+
+            // Append the content wrapper to the list item
+            listItem.appendChild(contentWrapper);
+
+            // Append the list item to the favorites list
+            favoritesList.appendChild(listItem);
+        }
+    });
+}
+
+
+
+// Function to remove a favorite station
+function removeFavorite(stationToRemove) {
+    if (!stationToRemove || !stationToRemove.name) {
+        console.error("Invalid station data:", stationToRemove); // Debug log if station data is invalid
+        return; // Exit early if the station data is invalid
+    }
+
+    let favorites = getFavoriteStations(); // Get current favorites
+    
+    //console.log("Current favorites:", favorites);
+    favorites = favorites.filter(station => station.name !== stationToRemove.name); // Remove the station
+   // console.log("future Current favorites:", favorites);
+    saveFavoriteStations(favorites);  // Save updated favorites back to storage (cookie/localStorage)
+    updateFavoritesList(); 
+    wrangleHeart(); // Re-render the updated list
+}
+
+// Save updated favorites to localStorage (or use cookies)
+function saveFavoriteStations(favorites) {
+    localStorage.setItem("favorites", JSON.stringify(favorites));  // Save to localStorage
+}
+
+// Retrieve favorite stations from localStorage (or cookies)
+function getFavoriteStations() {
+    let favoriteStations = localStorage.getItem("favorites");
+    return favoriteStations ? JSON.parse(favoriteStations) : [];
+}
+
+// Function to save favorite stations to localStorage
+
+// Function to handle heart button click
+function handleHeartClick(event) {
+    updateFavoritesList();
+
+
+    let isFavorite; // Flag to track if currentStation is in favorites
+
+    for (let i = 0; i < favorites.length; i++) {
+       // console.log("da324234s");
+      
+        if (favorites[i].name === currentStation.name) {
+           
+           // console.log(i+"fav: " + JSON.stringify(favorites[i]));
+          //  console.log(i+"current: " + JSON.stringify(currentStation));
+           
+            isFavorite = true;
+            break; // Exit loop early once we find a match
+        }
+    }
+    
+    
+  
+
+    favorites = getFavoriteStations();
+
+    // Check if the station is already in the favorites
+    if (!isFavorite) {
+        favorites.push(currentStation);  // Add station to favorites
+        saveFavoriteStations(favorites);  // Save updated favorites
+       // console.log(`${currentStation} added to favorites`);
+        updateFavoritesList();
+       let heartButton = event.target.parentElement.parentElement;
+       console.log("okwhat is this"+event.target.parentElement.parentElement)
+        updateHeartButton(heartButton, true); // Change heart to red
+    } else {
+        removeFavorite(currentStation);
+        //console.log("wokywokoakwokw");
+        updateHeartButton(heartButton, false); 
+        
+
+    }
+}
+
+
+function wrangleHeart() {
+    let button = document.getElementById("favorite-btn");
+
+    // Log the objects using JSON.stringify() to see their content
+    //console.log("fav: " + JSON.stringify(favorites));
+    //console.log("current: " + JSON.stringify(currentStation));
+
+    let isFavorite; // Flag to track if currentStation is in favorites
+
+for (let i = 0; i < favorites.length; i++) {
+   // console.log("da324234s");
+  
+    if (favorites[i].name === currentStation.name) {
+       
+       // console.log(i+"fav: " + JSON.stringify(favorites[i]));
+      //  console.log(i+"current: " + JSON.stringify(currentStation));
+      // //
+        isFavorite = true;
+        break; // Exit loop early once we find a match
+    }
+}
+
+    if (isFavorite) {
+        if (!button.classList.contains('filled')) {
+            button.classList.toggle('filled');
+            console.log("here3");
+        }
+//
+       // console.log("das");
+    } else {
+        if (button.classList.contains('filled')) {
+            button.classList.toggle('filled');
+            console.log("here4");
+           // console.log("here");
+        }
+       // console.log("dasasda");
+    }
+}
+
+
+
+function updateHeartButton(button, isFavorite) {
+    if (isFavorite) {
+        button.classList.add('favorite');
+        if (!button.classList.contains('filled')) {
+           
+           
+            button.classList.toggle('filled');
+            button.classList.add('filled');
+            console.log("HEARTbutton: "+button);
+            console.log("here1");
+        }
+        
+    } else {
+        button.classList.remove('favorite');
+        if (button.classList.contains('filled')) {
+            button.classList.toggle('filled');
+            console.log("here2");
+        }
+    }
+}
+
+// Add event listeners to all heart buttons
+document.querySelectorAll(".heart-btn").forEach(button => {
+    button.addEventListener("click", handleHeartClick);
+   // button.addEventListener("click", fillHeart);
+});
+
+
+
+//function fillHeart(event) {
+  //  event.currentTarget.classList.toggle('filled');
+//}
+
+// Display favorites when the page loads
+window.onload = function() {
+    updateFavoritesList();  // Update the list
+    // Update heart buttons for existing favorites
+    document.querySelectorAll(".heart-btn").forEach(button => {
+        const station = button.getAttribute("data-station");
+        let favorites = getFavoriteStations();
+        if (favorites.includes(station)) {
+            updateHeartButton(button, true);  // Mark as favorite
+        }
+    });
+}
+//console.log("ahahhahaHAAHAH current station "+currentStation);
+// or someVar = 'test'; to check when it's not undefined
+
+// Function to toggle visibility based on the variable's state
+function toggleButtonVisibility() {
+    const button = document.getElementById("favorite-btn");
+
+    // Check if the variable is undefined
+    if (typeof currentStation === 'undefined') {
+        button.disabled = true;
+        button.classList.add('disabled'); // Fades out
+    } else {
+        button.disabled = false; 
+        button.classList.remove('disabled'); // Fades in
+    }
+}
+
+// Call the function to update button visibility
+
+
+//clearAllCookies();
+
+toggleButtonVisibility();
+
 fetchStationsFromAPI(500000);
 animate();
