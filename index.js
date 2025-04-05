@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+let currentStationIndex;
 const audioPlayer = new Audio();
 audioPlayer.volume = 0.5;
 const stationsList = [];
@@ -88,7 +89,8 @@ const nextBtn = document.getElementById("next-btn");
 const volumeBtn = document.getElementById("volume-btn");
 
 
-
+playBtn.src = "audioplayericons/blank.svg";
+playBtn.classList.add("disabledPlay");
 particleGeometry = new THREE.BufferGeometry();
    
 //console.log('particleGeometry:', particleGeometry);
@@ -257,20 +259,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function updatePlayer(station) {
-   
-  
+    console.log("instant");
+
+    // Build text content
+    let textContent = station.state
+        ? `${station.name} - ${station.state}, ${station.country}`
+        : `${station.name} - ${station.country}`;
     
-   let textContent = station.state ? `${station.name} - ${station.state}, ${station.country}` : `${station.name} - ${station.country}`;
-   updatePlayerText(textContent);
-    audioPlayer.src = station.url;  // Set the station URL as the source
-    audioPlayer.load();             // Load the new stream URL
-    audioPlayer.play();   
-    
-    playBtn.src = "audioplayericons/pause.svg";// Start playing automatically
+    updatePlayerText(textContent);
+
+    // Show loading animation
+    document.getElementById("loadinganimation").style.display = "block";
+
+    // Update the audio player
+    audioPlayer.src = station.url;
+    audioPlayer.load();
+    audioPlayer.play();
+
+    // Wait until the audio is ready to play
+    audioPlayer.oncanplay = () => {
+        document.getElementById("loadinganimation").style.display = "none";
+        
+       
+        playBtn.classList.remove("disabledPlay");
+        nextBtn.classList.remove("disabledPlay");
+        prevBtn.classList.remove("disabledPlay");        
+        playBtn.classList.remove("disabledPlay2");
+        
+        playBtn.src = "audioplayericons/pause.svg";
+    };
+
+    // Optional: handle error case
+    audioPlayer.onerror = () => {
+        document.getElementById("loadinganimation").style.display = "none";
+        alert("Failed to load the stream.");
+        playBtn.src = "audioplayericons/play.svg";
+    };
 }
 
-// Play/Pause toggle
-function togglePlay() {
+
+// Play/Pause toggle  
+/*function togglePlay() {
    
     console.log("dhasgdkjashd"+currentStation);
     if (audioPlayer.paused) {
@@ -280,18 +309,66 @@ function togglePlay() {
         audioPlayer.pause();
         playBtn.src = "audioplayericons/play.svg";
     }
+}*/
+const loadingIcon = document.getElementById('loadinganimation');
+
+function togglePlay() {
+    console.log("1");
+    if (audioPlayer.paused) {
+        console.log("2");
+       console.log("THIS"+loadingIcon);
+        loadingIcon.style.display = 'block';
+        audioPlayer.play();
+        console.log("3");
+        playBtn.src = "audioplayericons/pause.svg";
+        console.log("4");
+        audioPlayer.onplaying = () => {
+            loadingIcon.style.display = 'none';
+           
+        };
+        console.log("5");
+        audioPlayer.onerror = () => {
+            loadingIcon.style.display = 'none';
+            alert('Error loading the stream.');
+        };
+    } else {
+        audioPlayer.pause();
+        playBtn.src = "audioplayericons/play.svg";
+    }
 }
+
+
 
 // Next Station
 function nextStation() {
-    currentStationIndex = (currentStationIndex + 1) % stations.length;
-    updatePlayer(stations[currentStationIndex]);
+    playBtn.src = "audioplayericons/blank.svg";
+    playBtn.classList.add("disabledPlay2");
+    const next = particleIndexMap.get(currentStationIndex+1);
+    updatePlayer(next);
+    currentStation = next;
+    updateFavoritesList(); 
+    toggleButtonVisibility();
+    wrangleHeart();
+    
+    currentStationIndex++;
+
 }
 
 // Previous Station
 function prevStation() {
-    currentStationIndex = (currentStationIndex - 1 + stations.length) % stations.length;
-    updatePlayer(stations[currentStationIndex]);
+    playBtn.src = "audioplayericons/blank.svg";
+    playBtn.classList.add("disabledPlay2");
+    const prev = particleIndexMap.get(currentStationIndex-1);
+    updatePlayer(prev);
+    currentStation = prev;
+    updateFavoritesList(); 
+    toggleButtonVisibility();
+    wrangleHeart();
+    
+    currentStationIndex--;
+
+
+
 }
 
 // Volume Control (Example of mute/unmute or volume adjustment)
@@ -358,6 +435,12 @@ function onClick(event) {
         if (intersects.length > 0) {
             const index = intersects[0].index; // Get the index of the clicked particle
             const station = particleIndexMap.get(index);
+            currentStationIndex = index;
+         //   console.log("ThisStation: "+JSON.stringify(station));
+          //  console.log("NextStation: "+JSON.stringify(next));
+          //  console.log("PrevStation: "+JSON.stringify(prev));
+           
+           
             if (station) {
                 console.log('Clicked Station:', station);
                 const material = station.material;
@@ -372,7 +455,8 @@ function onClick(event) {
                 if (station.url) {
                   
                     
-                  
+                    playBtn.src = "audioplayericons/blank.svg";
+                    playBtn.classList.add("disabledPlay2");
                     updatePlayer(station);
                     currentStation = station;
                     toggleButtonVisibility();
@@ -791,6 +875,7 @@ function updateFavoritesList() {
             }
 
             listItem.addEventListener("click", () => {
+                playBtn.src = "audioplayericons/blank.svg";
                 updatePlayer(station);
                 currentStation = station;
                 updateFavoritesList(); 
@@ -1020,6 +1105,11 @@ function toggleButtonVisibility() {
 
 volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value / 100;
+    if (volumeSlider.value == 0){
+        volumeBtn.classList.add('muted');
+    }else{
+        volumeBtn.classList.remove('muted');
+    }
 });
 //clearAllCookies();
 
