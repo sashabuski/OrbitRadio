@@ -11,6 +11,7 @@
             }
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
     
 
@@ -43,6 +44,52 @@
       background-color: #f0f0f0;
     }
 
+    .arrow {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    filter: invert(24%) sepia(78%) saturate(893%) hue-rotate(207deg) brightness(96%) contrast(88%);
+}
+
+
+    
+    .search-box {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid;
+    border-radius: 5px;
+    width:calc(100% - 55px);
+ 
+margin-left: 10px;
+            margin-bottom: 10px;
+    color: #42489f;
+    cursor: text;
+    background-color: rgba(109, 120, 212, 0); /* Transparent background */
+    border-color: rgba(109, 120, 212, 0.8); /* Light border */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Change the border color and shadow on focus */
+.search-box:focus {
+    border-color: #42489f; /* Darker border color */
+    box-shadow: 0 2px 8px rgba(109, 120, 212, 0.8);
+    outline: none;
+    cursor: text;
+    background-color: rgba(109, 120, 212, 0); /* Ensure background stays transparent */
+}
+
+/* Optional: Style for the placeholder text */
+.search-box::placeholder {
+    color: rgba(71, 78, 166, 0.8); /* Placeholder color */
+    font-style: italic;
+    cursor: text;
+}
+
+/* If you want to change the color of the search box on hover, use the :hover pseudo-class */
+.search-box:hover {
+  cursor: text;
+    background-color: rgba(160, 249, 36, 0); /* Keeps it transparent even when hovering */
+}
 
     /* Floating box styles */
     .floating-box {
@@ -58,7 +105,6 @@
       border-top-left-radius: 0px;
       box-shadow: 0 2px 5px rgba(109, 120, 212, 0.8);
       outline: 1px solid var(--box-outline-color); /* Outline for the floating box */
-    
       display: flex;
       flex-direction: column;
     }
@@ -211,7 +257,8 @@
     .remove-btn {
         transition: transform 0.2s;    
         margin-left: 10px;
-            background-color: transparent;
+        flex-shrink: 0;      
+        background-color: transparent;
             border: none;
             transition: filter 0.2s ease;
             font-size: 16px;
@@ -227,6 +274,8 @@
             width: 18px;
             filter: invert(49%) sepia(84%) saturate(334%) hue-rotate(196deg) brightness(85%) contrast(97%);
         }
+
+        
   .border-container {
   width: 100%; /* Adjust length */
   border-bottom: 1px solid #6D78D4;
@@ -501,17 +550,9 @@
         }
 
        
-        .no-hover:hover {
-    background-color: #E9E9E9; /* or any other value that removes hover effect */
-    cursor: default;
-}
+        
 
-        .search-box {
-            padding: 5px;
-            width: 85%;
-margin-left: 10px;
-            margin-bottom: 10px;
-        }
+       
 
         audio::-webkit-media-controls-panel {
             background-color: rgba(109, 120, 212, 0);
@@ -547,7 +588,10 @@ margin-left: 10px;
            
         }
 
-
+.genre{
+  padding-bottom: 10px;
+  border-bottom: 1px solid #6D78D4;
+}
         .heart-button {
             background: none;
             border: none;
@@ -666,7 +710,75 @@ margin-left: 10px;
       border-radius: 50%;
       cursor: pointer;
     }
-      
+
+    .genre-container {
+  display: flex;
+  flex-direction: row;
+  gap: 0px; 
+  width:200%;
+  transition: transform 0.3s ease-in-out;
+  /* optional: remove gap to ensure sides touch */
+}
+.backbutton {
+  position: fixed;
+  left: calc(100% - 7px);
+    width: calc(100% - 27px);
+  transition: transform 0.3s ease-in-out;
+  padding-left: 10px; /* Adjust spacing if needed */
+  padding-right: 10px;
+  background: #42489F;
+  color: #e8e8e8;
+  z-index: 2;
+  display: flex;
+  justify-content: center; /* Center the text horizontally */
+  align-items: center; /* Center the text vertically */
+  text-align: center;
+}
+
+.backarrow {
+  position: absolute;
+  left: 10px; /* Adjust space between the arrow and the text */
+  transform: rotate(180deg);
+  filter: invert(100%) sepia(8%) saturate(1%) hue-rotate(250deg) brightness(111%) contrast(82%);
+  /* Rotate the arrow 180 degrees */
+}
+
+.backarrow img {
+  width: 16px; /* Adjust size if necessary */
+  height: 16px;
+}
+
+
+.toplistmargin{
+  margin-top: 40px;
+}
+
+#genreList, #genreStationList {
+  flex: 1; /* or give specific width if needed */
+}
+
+    ::-webkit-scrollbar {
+    width: 7px;  /* Width of the vertical scrollbar */
+    height: 12px; /* Height of the horizontal scrollbar */
+}
+
+/* Style the scrollbar track (the part the thumb slides within) */
+::-webkit-scrollbar-track {
+    background-color: rgba(109, 120, 212, 0.8);
+    border-radius: 10px;
+}
+
+/* Style the scrollbar thumb (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background-color: rgba(81,90,179, 0.8);
+  filter: invert(57%) sepia(8%) saturate(3141%) hue-rotate(196deg) brightness(86%) contrast(86%)  drop-shadow(0 0px 2px rgba(71, 78, 166, 0.8));;
+    border-radius: 3px;
+}
+
+/* Hover effect for the scrollbar thumb */
+::-webkit-scrollbar-thumb:hover {
+    background-color: #42489f;
+}
     </style>
 
 <script>
@@ -794,13 +906,27 @@ margin-left: 10px;
           </div>
           <div id="tab-2" class="tab-content hidden">
              
-                    <input type="text" id="search-box" class="search-box no-hover" style="margin-top: 10px;" placeholder="Search items..." onkeyup="filterList()">
-                
+            <div class="search-wrapper" style="position: relative; display: inline-block; width: calc(100% - 25px);">
+              <input type="text" id="search-box" class="search-box" 
+                     style="padding-right: 2.5rem; margin-top: 10px;" 
+                     placeholder="Search items..." />
+            
+              <div id="loading-spinner" style="
+                  display: none;
+                  position: absolute;
+                  top: 50%;
+                  right: 10px;
+                  transform: translateY(-50%);
+                  width: 20px;
+                  height: 20px;
+              ">
+                <img src="loading2.svg" alt="Loading..." style="width: 100%; height: 100%;" />
+              </div>
+            </div>
+
                 <ul class="list">
                
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+             
             </ul>
           </div>
           <div id="tab-3" class="tab-content hidden">
@@ -810,13 +936,41 @@ margin-left: 10px;
                 <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
             </ul>
           </div>
-          <div id="tab-4" class="tab-content hidden">
-            <ul class="list">
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-            </ul>
+         
+         
+          <div id="tab-4" class="tab-content hidden" style="overflow: hidden; clip: rect(0, auto, auto, 0);">
+            
+            <div id="backbutton" class="genre backbutton list-item" style="display: none; transform: translateX(-100%);">
+              <span class="backarrow"><img src="sidearrow.svg" alt="arrow" width="16" height="16"></span>
+              <div id="backbuttontext">---</div>
           </div>
+          <div id="loading-spinner2" style="
+          display: none;
+          position: absolute;
+          
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+      ">
+        <img src="loading4.svg" alt="Loading..." style="width: 100%; height: 100%;" />
+      </div>
+
+            <div id= "genre-container" class="genre-container">
+
+             
+              <ul id="genreList" style="padding-left: 0px; margin-top: 0px;">
+                <!-- genre items -->
+              </ul>
+             
+             
+              <ul id="genreStationList" style="padding-left: 0px; margin-top: 0px;">
+                <!-- station items -->
+              </ul>
+            
+            </div>
+          </div>
+          
           <div id="tab-5" class="tab-content hidden">
             <ul class="list">
                 <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
@@ -933,7 +1087,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showTab(1);
 </script>
 
-    <script type="module" src="index.js"></script>
+    
     <script>
         const audioText = document.getElementById("audio-text");
         const nameText = document.getElementById("name-text");
@@ -955,5 +1109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener("load", checkTextOverflow);
         window.addEventListener("resize", checkTextOverflow);
     </script>
+
+<script type="module" src="index.js"></script>
 </body>
 </html>
