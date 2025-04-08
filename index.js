@@ -472,6 +472,7 @@ function prevStation() {
 function toggleVolume() {
     if (audioPlayer.muted) {
         audioPlayer.muted = false;
+        console.log("1");
         volumeSlider.value = preMuteValue;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.remove('muted'); 
@@ -479,7 +480,8 @@ function toggleVolume() {
     } else {
         audioPlayer.muted = true;
        preMuteValue = volumeSlider.value;
-        volumeSlider.value = 0;
+       console.log("2"); 
+       volumeSlider.value = 0;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.add('muted');
     }
@@ -497,11 +499,67 @@ volumeBtn.addEventListener("click", toggleVolume);
 
 
 
+//HISTORY
+function updateStationHistory(newStation) {
+    if (!newStation || !newStation.name) return;
+
+    const HISTORY_KEY = "stationHistory";
+
+    // Get existing history or initialize
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+    // Remove if station already exists (prevent duplicates)
+    history = history.filter(station => station.name !== newStation.name);
+
+    // Add new station to the start of the list (most recent first)
+    history.unshift(newStation);
+
+    // Limit history to 10 entries
+    if (history.length > 10) {
+        history = history.slice(0, 10);
+    }
+
+    // Save back to localStorage
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
 
 
 
+function getMostRecentStations(count = 5) {
+    const history = JSON.parse(localStorage.getItem("stationHistory")) || [];
+    const recentStations = history.slice(0, count); 
+    const tab3List = document.querySelector('#tab-3 .recentlyplayedlist');
+    tab3List.innerHTML = '';
 
+    recentStations.forEach(station => {
+        const listItem = document.createElement("li");
+        listItem.classList.add("list-item");
+    
+        const contentWrapper = document.createElement("div");
+        contentWrapper.classList.add("border-container");
+    
+        const textWrapper = document.createElement("div");
+    
+        const stationName = document.createTextNode(station.name);
+        textWrapper.appendChild(stationName);
+    
+        const locationText = document.createElement("h2");
+        locationText.classList.add("locationtext");
+        if(station.state){
+            locationText.textContent = `${station.state}, ${station.country}`;
+           }else{
+            locationText.textContent = `${station.country}`;
+           }
+        textWrapper.appendChild(locationText);
+    
+        contentWrapper.appendChild(textWrapper);
+        listItem.appendChild(contentWrapper);
+        tab3List.appendChild(listItem);
+    });
+    // Most recent stations are at the start
+}
 
+getMostRecentStations();
 
 
 
@@ -563,6 +621,8 @@ function onClick(event) {
                     playBtn.classList.add("disabledPlay2");
                     updatePlayer(station);
                     currentStation = station;
+                    updateStationHistory(currentStation);
+                    getMostRecentStations();
                     toggleButtonVisibility();
                     updateFavoritesList();
                     wrangleHeart();
@@ -1060,6 +1120,117 @@ window.onload = startScrolling1;
 window.onresize = startScrolling1;
 
 
+
+/**
+ * HOMEPAGE
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+async function getLocalStations(){
+    const stationList = document.querySelector('#tab-3 .list');
+    let countrycode; 
+    let localSearchResults;
+    fetch('https://ipinfo.io?token=103b79e365df36')
+    .then(response => response.json())
+    .then(data => {
+      countrycode = data.country;
+      document.getElementById('country').textContent = country;
+    })
+    .catch(error => {
+      console.error('Error fetching location data:', error);
+      document.getElementById('country').textContent = 'Could not determine your country.';
+    });
+    
+    try {
+        const response = await fetch("http://localhost:3000/stations");
+        const stations = await response.json();
+        console.log("v2"+stations[2]);
+        
+       localSearchResults = stations
+    .filter(station =>
+        station.url &&
+        station.countrycode == countrycode
+    )
+    .filter((station, index, self) =>
+        index === self.findIndex(s => s.name === station.name)
+    );
+
+        if (localSearchResults.length === 0) {
+            const li = document.createElement('li');
+            console.log("v7");
+            li.textContent = "No stations found for this genre.";
+            stationList.appendChild(li);
+        } else {
+            loadLocalStations(localSearchResults);
+             // Load initial batch
+        }
+
+        
+
+    } catch (error) {
+        console.error("Error fetching genre stations:", error);
+    } finally {
+        loadingSpinner2.style.display = "none";
+    }
+
+
+
+
+
+
+
+
+}
+
+
+function loadLocalStations(localSearchResults) {
+    const tab3List = document.querySelector('#tab-3 .list');
+    tab3List.innerHTML = ''; // Clear previous results
+
+    // Shuffle the array and take 10 random stations
+    const shuffled = localSearchResults.sort(() => 0.5 - Math.random());
+    const selectedStations = shuffled.slice(0, 10);
+
+    selectedStations.forEach(station => {
+        const listItem = document.createElement("li");
+        listItem.classList.add("list-item");
+    
+        const contentWrapper = document.createElement("div");
+        contentWrapper.classList.add("border-container");
+    
+        const textWrapper = document.createElement("div");
+    
+        const stationName = document.createTextNode(station.name);
+        textWrapper.appendChild(stationName);
+    
+        const locationText = document.createElement("h2");
+        locationText.classList.add("locationtext");
+        if(station.state){
+            locationText.textContent = `${station.state}, ${station.country}`;
+           }else{
+            locationText.textContent = `${station.country}`;
+           }
+        textWrapper.appendChild(locationText);
+    
+        contentWrapper.appendChild(textWrapper);
+        listItem.appendChild(contentWrapper);
+        tab3List.appendChild(listItem);
+    });
+
+  
+    
+}
+
+
+
+getLocalStations();
 /*FAVOURITES SECTION
 *
 *
@@ -1323,8 +1494,10 @@ function toggleButtonVisibility() {
 volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value / 100;
     if (volumeSlider.value == 0){
+        console.log("3");
         volumeBtn.classList.add('muted');
     }else{
+        console.log("4");
         volumeBtn.classList.remove('muted');
     }
 });

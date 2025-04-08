@@ -44,6 +44,16 @@
       background-color: #f0f0f0;
     }
 
+
+   .homepagetitle{
+    height: 50px;
+    margin-left: 10px;
+    margin-right: 10px;
+    font-size: 28px;
+    color: #1e26a3;
+    margin-top: 20px;
+    border-bottom: 1px solid #6D78D4;
+}
     .arrow {
     display: flex;
     align-items: center;
@@ -929,11 +939,16 @@ margin-left: 10px;
              
             </ul>
           </div>
+        
           <div id="tab-3" class="tab-content hidden">
+            <div class = "homepagetitle"> Recently played</div>
+            <ul class="recentlyplayedlist" style="padding-left: 0px;">
+            
+            </ul>
+            <!--<div style=" outline: 1px solid var(--box-outline-color); background: #e8e8e8; width: calc(100% - 30px); border-radius: 5px;margin-left: 5px;margin-right: 5px;">-->
+            <div class = "homepagetitle"> Local stations</div>
             <ul class="list">
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
-                <li class="list-item">Item 1 in Tab 1<h2 class = "locationtext border-container">hahahah</h2></li>
+            
             </ul>
           </div>
          
@@ -1084,7 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedTab.classList.add('active');
     }
     
-    showTab(1);
+    showTab(3);
 </script>
 
     
