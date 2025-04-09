@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-
+let currentlistitem;
 let genreListActive = false;
 let currentStationIndex;
 const audioPlayer = new Audio();
@@ -535,6 +535,25 @@ function getMostRecentStations(count = 5) {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
     
+
+        listItem.addEventListener("click", () => {
+            playBtn.src = "audioplayericons/blank.svg";
+            updatePlayer(station);
+            currentStation = station;
+            if(currentlistitem){
+            currentlistitem.style.backgroundColor = "";
+            currentlistitem.style.color = "";
+            }
+            toggleButtonVisibility();
+            
+            listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#d896ed";
+            currentlistitem = listItem;
+           
+            updateFavoritesList(); 
+            highlightListItem();
+            wrangleHeart();
+        });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
     
@@ -554,6 +573,15 @@ function getMostRecentStations(count = 5) {
     
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
+       
+        if(currentStation){
+            if(currentStation.changeuuid == station.changeuuid){
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#d896ed";
+            }
+        }
+       
+
         tab3List.appendChild(listItem);
     });
     // Most recent stations are at the start
@@ -1137,6 +1165,8 @@ async function getLocalStations(){
     const stationList = document.querySelector('#tab-3 .list');
     let countrycode; 
     let localSearchResults;
+    const localloadingspinner = document.getElementById("local-loading-spinner");
+    localloadingspinner.style.display = "block";
     fetch('https://ipinfo.io?token=103b79e365df36')
     .then(response => response.json())
     .then(data => {
@@ -1151,7 +1181,7 @@ async function getLocalStations(){
     try {
         const response = await fetch("http://localhost:3000/stations");
         const stations = await response.json();
-        console.log("v2"+stations[2]);
+       // console.log("v2"+stations[2]);
         
        localSearchResults = stations
     .filter(station =>
@@ -1164,7 +1194,7 @@ async function getLocalStations(){
 
         if (localSearchResults.length === 0) {
             const li = document.createElement('li');
-            console.log("v7");
+          //  console.log("v7");
             li.textContent = "No stations found for this genre.";
             stationList.appendChild(li);
         } else {
@@ -1193,7 +1223,7 @@ async function getLocalStations(){
 function loadLocalStations(localSearchResults) {
     const tab3List = document.querySelector('#tab-3 .list');
     tab3List.innerHTML = ''; // Clear previous results
-
+    const localloadingspinner = document.getElementById("local-loading-spinner");
     // Shuffle the array and take 10 random stations
     const shuffled = localSearchResults.sort(() => 0.5 - Math.random());
     const selectedStations = shuffled.slice(0, 10);
@@ -1202,6 +1232,24 @@ function loadLocalStations(localSearchResults) {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
     
+      
+      
+        listItem.addEventListener("click", () => {
+            playBtn.src = "audioplayericons/blank.svg";
+            updatePlayer(station);
+            currentStation = station;
+            if(currentlistitem){
+            currentlistitem.style.backgroundColor = "";
+            currentlistitem.style.color = "";
+            }
+            toggleButtonVisibility();
+            updateFavoritesList(); 
+            listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#d896ed";
+            currentlistitem = listItem;
+            highlightListItem();
+            wrangleHeart();
+        });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
     
@@ -1221,8 +1269,18 @@ function loadLocalStations(localSearchResults) {
     
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
+
+
+        if(currentStation){
+            if(currentStation.changeuuid == station.changeuuid){
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#d896ed";
+            }
+        }
         tab3List.appendChild(listItem);
     });
+
+    localloadingspinner.style.display = "none";
 
   
     
@@ -1231,7 +1289,7 @@ function loadLocalStations(localSearchResults) {
 
 
 getLocalStations();
-/*FAVOURITES SECTION
+/*FAVOURITES 
 *
 *
 *
@@ -1252,17 +1310,25 @@ function updateFavoritesList() {
             const listItem = document.createElement("li");
             listItem.classList.add("list-item");
 
+
+          
             // Apply styles if this station is the current station
             if (currentStation && station.name === currentStation.name) {
+               
                 listItem.style.backgroundColor = "#6D78D4";
                 listItem.style.color = "#d896ed";
             }
 
             listItem.addEventListener("click", () => {
+                if(currentlistitem){
+                    currentlistitem.style.backgroundColor = "";
+                    currentlistitem.style.color = "";
+                    }
                 playBtn.src = "audioplayericons/blank.svg";
                 updatePlayer(station);
                 currentStation = station;
                 updateFavoritesList(); 
+                highlightListItem();
                 toggleButtonVisibility();
                 wrangleHeart();
             });
@@ -1383,6 +1449,40 @@ function handleHeartClick(event) {
 }
 
 
+function highlightListItem() {
+    const searchList = document.querySelectorAll("#tab-2 .list li");
+    const recentList = document.querySelectorAll('#tab-3 .recentlyplayedlist li');
+    const localList = document.querySelectorAll('#tab-3 .list li');
+    const genreList = document.querySelectorAll('#genreStationList li');
+
+    const allListItems = [...searchList, ...recentList, ...localList, ...genreList];
+
+    allListItems.forEach(listItem => {
+        // Get the inner div (the one that has the station name text + h2)
+        const containerDiv = listItem.querySelector(".border-container > div");
+
+        // Clone the node to remove the h2 from the copy
+        const cloned = containerDiv.cloneNode(true);
+        const h2 = cloned.querySelector("h2");
+        if (h2) cloned.removeChild(h2);
+
+        const stationName = cloned.textContent.trim();
+
+        if (stationName === currentStation.name.trim()) {
+            listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#d896ed";
+        } else {
+            if (listItem.style.backgroundColor === "rgb(109, 120, 212)" &&
+                listItem.style.color === "rgb(216, 150, 237)") {
+                listItem.style.backgroundColor = "";
+                listItem.style.color = "";
+            }
+        }
+    });
+}
+
+
+
 function wrangleHeart() {
     let button = document.getElementById("favorite-btn");
 
@@ -1494,10 +1594,10 @@ function toggleButtonVisibility() {
 volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value / 100;
     if (volumeSlider.value == 0){
-        console.log("3");
+       // console.log("3");
         volumeBtn.classList.add('muted');
     }else{
-        console.log("4");
+        //console.log("4");
         volumeBtn.classList.remove('muted');
     }
 });
@@ -1807,6 +1907,23 @@ function updateSearchResults(results, append = false) {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
 
+        listItem.addEventListener("click", () => {
+            playBtn.src = "audioplayericons/blank.svg";
+            updatePlayer(station);
+            currentStation = station;
+            if(currentlistitem){
+            currentlistitem.style.backgroundColor = "";
+            currentlistitem.style.color = "";
+            }
+            toggleButtonVisibility();
+            updateFavoritesList(); 
+            listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#d896ed";
+            currentlistitem = listItem;
+            highlightListItem();
+            wrangleHeart();
+        });
+
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
 
@@ -1826,6 +1943,15 @@ function updateSearchResults(results, append = false) {
 
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
+        
+        if(currentStation){
+         
+            if(currentStation.changeuuid == station.changeuuid){
+               console.log("HERE1");
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#d896ed";
+            }
+        }
         searchList.appendChild(listItem);
     });
 }
@@ -1893,7 +2019,7 @@ async function showGenreStationList(selectedTag) {
      setTimeout(() => {
         loadingSpinner2.style.display = "block";
     }, 300);
-    console.log("1");
+   // console.log("1");
     genreRenderedCount = 0;
     content.scrollTop = 0;
     genreListActive = true;
@@ -1901,7 +2027,7 @@ async function showGenreStationList(selectedTag) {
     try {
         const response = await fetch("http://localhost:3000/stations");
         const stations = await response.json();
-        console.log("v2"+stations[2]);
+       // console.log("v2"+stations[2]);
         
         genreSearchResults = stations
     .filter(station =>
@@ -1918,7 +2044,7 @@ async function showGenreStationList(selectedTag) {
 
         if (genreSearchResults.length === 0) {
             const li = document.createElement('li');
-            console.log("v7");
+           // console.log("v7");
             li.textContent = "No stations found for this genre.";
             stationList.appendChild(li);
         } else {
@@ -1940,13 +2066,30 @@ async function showGenreStationList(selectedTag) {
 function loadMoreGenreStations() {
     const stationList = document.getElementById('genreStationList');
     const nextBatch = genreSearchResults.slice(genreRenderedCount, genreRenderedCount + GENRE_RESULTS_PER_BATCH);
-    console.log("3");
+    //console.log("3");
    
 
     nextBatch.forEach(station => {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
-        console.log("4");
+
+        listItem.addEventListener("click", () => {
+            playBtn.src = "audioplayericons/blank.svg";
+            updatePlayer(station);
+            currentStation = station;
+            if(currentlistitem){
+            currentlistitem.style.backgroundColor = "";
+            currentlistitem.style.color = "";
+            }
+            toggleButtonVisibility();
+            updateFavoritesList(); 
+            listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#d896ed";
+            currentlistitem = listItem;
+            highlightListItem();
+            wrangleHeart();
+        });
+       // console.log("4");
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
 
@@ -1973,6 +2116,14 @@ if(firstStation == 1){
 
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
+
+
+        if(currentStation){
+            if(currentStation.changeuuid == station.changeuuid){
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#d896ed";
+            }
+        }
         stationList.appendChild(listItem);
     });
 
@@ -1999,6 +2150,7 @@ function generateTagList() {
         // Create list item
         const listItem = document.createElement('li');
         listItem.classList.add('list-item', 'genre');
+        
         listItem.textContent = tag;
 
         // Create arrow using local SVG file

@@ -852,7 +852,23 @@ margin-left: 10px;
         <img id="prev-btn" src="audioplayericons/back.svg" alt="Button 1" class="disabledPlay button-img">
         <div> <img id="play-btn" src="audioplayericons/play.svg" style="height:100px" alt="Button 2" class="button-img">
            
-           <div id="loadinganimation" style="display: none;">
+
+          <div id="loadinganimation" style="
+                  display: none; 
+                  position: absolute;
+                  
+                 
+                  
+                  width: 50px;
+                  height: 50px;
+                  bottom: 21.5px;
+                  
+                  left: calc(50% - 23.5px);
+              ">
+                <img src="whiteload.svg" alt="Loading..." style="width: 100%; height: 100%;" />
+              </div>
+             
+          <!-- <div id="loadinganimation" style="display: none;">
             <div class="circle"></div>
             <div class="circle"></div>
             <div class="circle"></div>
@@ -864,7 +880,7 @@ margin-left: 10px;
             <div class="circle"></div>
             <div class="circle"></div>
             <div class="circle"></div>
-         </div>
+         </div>-->
 
 
 
@@ -905,7 +921,7 @@ margin-left: 10px;
           <button class="tab-button" style = "top: -20px" onclick="showTab(2)"> <img src="icon/search.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;">
             <div class = "catHeader">Search</div></button>
           <button class="tab-button" onclick="showTab(3)"><img src="icon/home.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Home</div></button>
-          <button class="tab-button" onclick="showTab(4)"><img src="icon/explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Genres</div></button>
+          <button class="tab-button" onclick="showTab(4)"><img src="icon/explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Tags</div></button>
           <button class="tab-button" onclick="showTab(5)"><img src="icon/planet.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Discover</div></button>
         </div>
         <div class="content">
@@ -942,11 +958,23 @@ margin-left: 10px;
         
           <div id="tab-3" class="tab-content hidden">
             <div class = "homepagetitle"> Recently played</div>
-            <ul class="recentlyplayedlist" style="padding-left: 0px;">
+            <ul class="recentlyplayedlist" style="padding-left: 0px; margin-top:0px;">
             
             </ul>
             <!--<div style=" outline: 1px solid var(--box-outline-color); background: #e8e8e8; width: calc(100% - 30px); border-radius: 5px;margin-left: 5px;margin-right: 5px;">-->
-            <div class = "homepagetitle"> Local stations</div>
+            <div class = "homepagetitle"> Local stations<div id="local-loading-spinner" style="
+             
+              position: relative;
+              top: -60%;
+              left: 85%;
+    
+              width: 30px;
+              height: 30px;
+          ">
+            <img src="loading2.svg" alt="Loading..." style="width: 100%; height: 100%;" />
+          </div></div>
+
+
             <ul class="list">
             
             </ul>
