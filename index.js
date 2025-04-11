@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+
+let outerposition;
+let pulseVisible = false;
 let currentlistitem;
 let genreListActive = false;
 let currentStationIndex;
@@ -35,6 +38,9 @@ let hoverCircleSize = 2;
 const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  // Set opacity (range: 0 to 1)
     transparent: true });
 
+
+
+    let targetPosition;  
 // Create a mesh for the wireframe lines
 const line = new THREE.LineSegments(wireframe, material);
 sphereGroup.add(line);
@@ -111,7 +117,7 @@ const markerMaterial4 = new THREE.LineBasicMaterial({ color: 0x916cc7, opacity: 
 
 // Create a mesh for the wireframe lines
 const marker4 = new THREE.LineSegments(markerWireframe4, markerMaterial4);
-scene.add(marker4);
+//scene.add(marker4);
 
 markerMaterial1.opacity = 0;
 markerMaterial2.opacity = 0;
@@ -159,6 +165,9 @@ playBtn.classList.add("disabledPlay");
 particleGeometry = new THREE.BufferGeometry();
    
 //console.log('particleGeometry:', particleGeometry);
+
+
+
 
  // Create the central sphere (representing the atom's nucleus)
  const nucleusGeometry = new THREE.SphereGeometry(1, 20, 20);
@@ -353,6 +362,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function updatePlayer(station) {
    
 
+
+    updateStationHistory(station);
+    getMostRecentStations();
     // Build text content
     let textContent = station.state
         ? `${station.name} - ${station.state}, ${station.country}`
@@ -370,6 +382,24 @@ function updatePlayer(station) {
 
     // Wait until the audio is ready to play
     audioPlayer.oncanplay = () => {
+        sphere1.visible = true;
+        sphere0.visible = true;
+        
+        pulseVisible = true;
+
+        if(pulseVisible){
+            // Initial animations
+            expandAndFade(sphere1);
+            gsap.delayedCall(1.5, () => {
+            expandAndFade(sphere1);
+            });
+            }
+        if(pulseVisible){
+        
+            //console.log("AREWEHEREORNOT");
+      
+        }
+
         document.getElementById("loadinganimation").style.display = "none";
         
        
@@ -380,7 +410,7 @@ function updatePlayer(station) {
         
 
         stopmarkerFlashing();
-        toggleMarker4Flashing();
+       // toggleMarker4Flashing();
         playBtn.src = "audioplayericons/pause.svg";
     };
 
@@ -415,7 +445,7 @@ function togglePlay() {
        
         loadingIcon.style.display = 'block';
         audioPlayer.play();
-        toggleMarker4Flashing();
+        //toggleMarker4Flashing();
         playBtn.src = "audioplayericons/pause.svg";
        
         audioPlayer.onplaying = () => {
@@ -429,11 +459,10 @@ function togglePlay() {
         };
     } else {
         audioPlayer.pause();
-        toggleMarker4Flashing();
+       // toggleMarker4Flashing();
         playBtn.src = "audioplayericons/play.svg";
     }
 }
-
 
 
 // Next Station
@@ -471,16 +500,21 @@ function prevStation() {
 // Volume Control (Example of mute/unmute or volume adjustment)
 function toggleVolume() {
     if (audioPlayer.muted) {
+       // console.log("audioPlayer.sound: "+audioPlayer.muted);
         audioPlayer.muted = false;
-        console.log("1");
+       // console.log("1");
+      
         volumeSlider.value = preMuteValue;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.remove('muted'); 
         // Normal volume icon
     } else {
+
+       // console.log("audioPlayer.sound: "+audioPlayer.muted);
         audioPlayer.muted = true;
-       preMuteValue = volumeSlider.value;
-       console.log("2"); 
+        
+        preMuteValue = volumeSlider.value;
+      // console.log("2"); 
        volumeSlider.value = 0;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.add('muted');
@@ -603,8 +637,18 @@ getMostRecentStations();
 // Raycasting for click detection
 
 function onClick(event) {
+    pulseVisible = false;
+material0.opacity = 0;
+material0.opacity = 0;
+
+
+console.log("onlcick");
+
+    const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
+    if (!(hoveredElement instanceof HTMLCanvasElement)) {
+    
+      } else {
    
-    //console.log("xxxxx");
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     let closestPoint = null;
@@ -621,28 +665,23 @@ function onClick(event) {
             const index = intersects[0].index; // Get the index of the clicked particle
             const station = particleIndexMap.get(index);
             currentStationIndex = index;
-         //   console.log("ThisStation: "+JSON.stringify(station));
-          //  console.log("NextStation: "+JSON.stringify(next));
-          //  console.log("PrevStation: "+JSON.stringify(prev));
-        //  console.log("herehrehreh0000000000");
-        //  console.log(isDragging);
-
 
            if(!isDragging){
-//("herehrehreh1111111111");
-// console.log(isDragging);
-            if (station) {
+
+sphere1.visible = false;
+        sphere0.visible = false;
+           
+                if (station) {
                 console.log('Clicked Station:', station);
                 const material = station.material;
 
                 if (material instanceof THREE.PointsMaterial) {
-                   // console.log('Size before:', material.size);
+                   
                     material.size *= 1.2; // Increase size to indicate selection
-                    //console.log('Size after:', material.size);
                 }
 
-                // Load the audio stream from the station URL
-                if (station.url) {
+          
+                if (station.url) {      // Load the audio stream from the station URL
                   
                     
                     playBtn.src = "audioplayericons/blank.svg";
@@ -654,10 +693,7 @@ function onClick(event) {
                     toggleButtonVisibility();
                     updateFavoritesList();
                     wrangleHeart();
-                    // Set the station URL as the source
-                             // Optionally, start playing automatically
-                   // console.log('Now playing stream from:', station.url);
-                
+                  
                 
                    const worldPoint = intersects[0].point;
 
@@ -670,81 +706,41 @@ function onClick(event) {
                 marker1.position.copy(direction);
                 marker2.position.copy(direction.multiplyScalar(1.03));
                 marker3.position.copy(direction.multiplyScalar(1.04));
-                marker4.position.copy(direction.multiplyScalar(1.055));
+              
+               
+                 targetPosition = direction.clone().multiplyScalar(1.07);
+                 outerposition= direction.clone().multiplyScalar(5.07);
                 
+                
+                sphere0.position.copy(direction.multiplyScalar(1.07));
+                sphere1.position.copy(direction.multiplyScalar(1));
                 
                 markerMaterial1.opacity = 0;
                 markerMaterial2.opacity = 0;
                 markerMaterial3.opacity = 0;
-                markerMaterial4.opacity = 0;
-                
-               if(marker4Flashing = true) {
-              toggleMarker4Flashing();
-               }
-
+            
                 fadeInMarkers();
 
                 startmarkerFlashing();
-                // atomGroup.position.copy(direction);
-              //  atomGroup.visible = true;
+               
                 }
             }
-
-
 
 
         }}
-/* 
-        let positions;
-        if (system.geometry.attributes.position.array) {console.log("ber");
-            positions = system.geometry.attributes.position.array;
-        } else {
-         //   console.log('No positions found for particle system');
-            continue;
-        }
 
-        let particleWorldPosition = new THREE.Vector3();
-
-        for (let i = 0; i < positions.length; i += 3) {
-            particleWorldPosition.set(positions[i] * 1.2, positions[i + 1] * 1.2, positions[i + 2] * 1.2);
-            particleWorldPosition.applyMatrix4(system.matrixWorld); // Convert to world coordinates
-
-            let distance = raycaster.ray.distanceSqToPoint(particleWorldPosition); // Squared distance check
-
-            if (distance < 1) { // Threshold for detecting a "hit"
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestPoint = particleWorldPosition.clone();
-                }
-            }
-        }
-
-        if (closestPoint) {
-            console.log("berefe  "+wireframeCubeObject.position.x +", "+wireframeCubeObject.position.y +", "+wireframeCubeObject.position.z)
-            // const jewelPosition =  latLonToCartesian(station.geo_lat, station.geo_long, 100.5);; 
-           
-           
-            wireframeCubeObject.position.copy(closestPoint);
-            console.log("aftere  " +wireframeCubeObject.position.x +", "+wireframeCubeObject.position.y +", "+wireframeCubeObject.position.z)
-        
-        }
-
-
-console.log("hovercircle pos: "+JSON.stringify(hoverCircle.position));       
-markerPosition = hoverCircle.position;
-console.log("markerPosition pos: "+JSON.stringify(markerPosition));   
-
-     wireframeCubeObject.position.copy(markerPosition); */  
      sphereGroup.add(wireframeCubeObject);    
      sphereGroup.add(atomGroup);
      sphereGroup.add(marker1);
      sphereGroup.add(marker2);
      sphereGroup.add(marker3);
-     sphereGroup.add(marker4);
-     //   console.log("wireframeCubeObject pos: "+JSON.stringify(wireframeCubeObject.position)); 
+     sphereGroup.add(sphere0);
+     sphereGroup.add(sphere1);
+   
 
 
     }
+}
 }
 
        
@@ -821,6 +817,16 @@ function onMouseMove(event) {
 
 function onMouseMoveRaycast(event) {
     
+    const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
+    if (!(hoveredElement instanceof HTMLCanvasElement)) {
+      //  console.log('Not hovering over the canvas!');
+        // Do something when NOT hovering over canvas
+      } else {
+       // console.log('Hovering over the canvas!');
+        // Do something when hovering
+    
+   
+   
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     const button = document.getElementById("tooltip-btn");
@@ -829,7 +835,8 @@ function onMouseMoveRaycast(event) {
     raycaster.setFromCamera(mouse, camera);
     let closestDistance = Infinity;
     let closestPoint = null;
-
+   
+    
     // Check all particle systems (particles and cityParticleSystems)
     const allParticles = [particles, ...cityParticleSystems]; // does this  Combine single and city particle systems
     if(!isDragging){
@@ -870,9 +877,12 @@ nameText.style.animation = 'scrollText 15s linear infinite';
 
 
         let positions;
+       
+       if(system){
         if (system.geometry.attributes.position.array) {
             positions = system.geometry.attributes.position.array;
-        } else {
+        } 
+    }else {
            // console.log('No positions found for particle system');
             continue;
         }
@@ -926,6 +936,9 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         startScrolling2();
         tooltip.style.opacity = "1";
     } else {
+
+
+        document.body.style.cursor = 'default';
         if(event.target.tagName != "INPUT")
         {
         //document.body.style.cursor = 'default';
@@ -949,13 +962,15 @@ nameText.style.animation = 'scrollText 15s linear infinite';
 
     }
 }
+}
 
   
 
 function onMouseUp() {
-   // console.log("jhiji1"+isDragging);
+    console.log("isDragging: "+isDragging);
     isDragging = false;
-   // console.log("jhiji2"+isDragging);
+    console.log("isDragging: "+isDragging);
+    
 }
 
 window.addEventListener('wheel', onWheel, false);
@@ -969,6 +984,9 @@ function animate() {
     requestAnimationFrame(animate);
     camera.position.z += (targetZ - camera.position.z) * 0.1;
    
+
+
+   // console.log(sphere0.visible);
    if(hoverCircle.visible == false){
     sphereGroup.rotation.y += 0.001;
    }
@@ -1238,6 +1256,8 @@ function loadLocalStations(localSearchResults) {
             playBtn.src = "audioplayericons/blank.svg";
             updatePlayer(station);
             currentStation = station;
+            
+           
             if(currentlistitem){
             currentlistitem.style.backgroundColor = "";
             currentlistitem.style.color = "";
@@ -1358,7 +1378,10 @@ function updateFavoritesList() {
             // Create "X" button for removal
             const removeButton = document.createElement("button");
             removeButton.classList.add("remove-btn");
-            removeButton.addEventListener("click", () => removeFavorite(station));
+            removeButton.addEventListener("click", (event) => {
+                event.stopPropagation(); // prevents the list-item click event
+                removeFavorite(station);
+              });
 
             // Append text and button to the content wrapper
             contentWrapper.appendChild(textWrapper);
@@ -1947,7 +1970,7 @@ function updateSearchResults(results, append = false) {
         if(currentStation){
          
             if(currentStation.changeuuid == station.changeuuid){
-               console.log("HERE1");
+              // console.log("HERE1");
                 listItem.style.backgroundColor = "#6D78D4";
                 listItem.style.color = "#d896ed";
             }
@@ -2178,12 +2201,86 @@ function generateTagList() {
 
 
 
+  
+const geometry0 = new THREE.SphereGeometry(0.1, 32, 32);
+const material0 = new THREE.MeshBasicMaterial({
+  color: 0x8670cd,
+  wireframe: true,
+  transparent: true,
+  opacity: 1,
+  depthWrite: false
+});
+const sphere0 = new THREE.Mesh(geometry0, material0);
+//  sphere0.position.y = yPos;
+scene.add(sphere0);
+
+
+
+
+
+const geometry1 = new THREE.SphereGeometry(0.1, 32, 32);
+const material1 = new THREE.MeshBasicMaterial({
+  color: 0x6d78d4,
+  wireframe: true,
+  transparent: true,
+  opacity: 0,
+  depthWrite: false
+});
+const sphere1 = new THREE.Mesh(geometry1, material1);
+//  sphere1.position.y = yPos;
+scene.add(sphere1);
+material0.opacity = 0;
+material1.opacity = 0;
+
+// Create two spheres
+
+
+
+// Animation function using GSAP
+function expandAndFade(sphere) {
+// Reset scale and opacity
+gsap.set(sphere.scale, { x: 0.1, y: 0.1, z: 0.1 });
+sphere.material.opacity = 1;
+
+// Animate scale and opacity
+gsap.to(sphere.scale, {
+  x: 50,
+  y: 50,
+  z: 50,
+  duration: 3,
+  ease: "circ.out"
+});
+
+gsap.to(sphere.material, {
+  opacity:0,
+  duration: 2.8,
+  ease: "circ.out"
+});
+}
+
+// Optional: Looping logic (if you want repeating pulse)
+function loopPulse(sphere0, delay = 0) {
+
+
+gsap.delayedCall(delay, () => {
+  expandAndFade(sphere0);
+  loopPulse(sphere0, 3); // Recursively pulse every 3 seconds
+});
+
+}
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    loopPulse(sphere0, 0);
+    loopPulse(sphere1, 1.5);
+    sphere0.visible = false;
+    sphere1.visible = false;
+});
+
 
 // Generate the list on page load
 generateTagList();
-
-
 toggleButtonVisibility();
-
 fetchStationsFromAPI(500000);
 animate();
