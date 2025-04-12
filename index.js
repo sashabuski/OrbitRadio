@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-
+let isRotatingToTarget = false;
+let targetQuaternion = new THREE.Quaternion();
 let outerposition;
 let pulseVisible = false;
 let currentlistitem;
@@ -362,6 +363,46 @@ document.addEventListener("DOMContentLoaded", () => {
 function updatePlayer(station) {
    
 
+    sphere1.visible = false;
+    sphere0.visible = false;
+
+// 🔁 New way: Use station geo_lat and geo_long to position markers
+const direction = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
+const baseDistance = 102.05;
+
+const basePosition = direction.clone().multiplyScalar(baseDistance);
+wireframeCubeObject.position.copy(basePosition);
+marker1.position.copy(basePosition);
+marker2.position.copy(direction.clone().multiplyScalar(baseDistance * 1.03));
+marker3.position.copy(direction.clone().multiplyScalar(baseDistance * 1.07));
+
+targetPosition = direction.clone().multiplyScalar(baseDistance * 1.07);
+outerposition = direction.clone().multiplyScalar(baseDistance * 5.07);
+
+sphere0.position.copy(direction.clone().multiplyScalar(baseDistance * 1.145));
+sphere1.position.copy(direction.clone().multiplyScalar(baseDistance * 1.145));
+
+markerMaterial1.opacity = 0;
+markerMaterial2.opacity = 0;
+markerMaterial3.opacity = 0;
+
+
+sphereGroup.add(wireframeCubeObject);
+sphereGroup.add(atomGroup);
+sphereGroup.add(marker1);
+sphereGroup.add(marker2);
+sphereGroup.add(marker3);
+sphereGroup.add(sphere0);
+sphereGroup.add(sphere1);
+
+fadeInMarkers();
+startmarkerFlashing();
+
+
+
+
+
+
 
     updateStationHistory(station);
     getMostRecentStations();
@@ -385,6 +426,31 @@ function updatePlayer(station) {
         sphere1.visible = true;
         sphere0.visible = true;
         
+
+
+
+
+
+        const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
+        const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
+        targetDirection.applyQuaternion(currentRotation);
+
+        const forward = new THREE.Vector3(0, 0, 1);
+        const rotationAxis = new THREE.Vector3().crossVectors(targetDirection, forward).normalize();
+        const angle = Math.acos(Math.min(Math.max(targetDirection.dot(forward), -1), 1));
+
+        if (angle > 0.0001) {
+            const rotateQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
+            targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
+            isRotatingToTarget = true;
+        }
+
+
+
+
+
+
+
         pulseVisible = true;
 
         if(pulseVisible){
@@ -635,113 +701,68 @@ getMostRecentStations();
 
 
 // Raycasting for click detection
-
 function onClick(event) {
     pulseVisible = false;
-material0.opacity = 0;
-material0.opacity = 0;
+    material0.opacity = 0;
+    material1.opacity = 0;
 
-
-console.log("onlcick");
+    console.log("onClick");
 
     const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
     if (!(hoveredElement instanceof HTMLCanvasElement)) {
-    
-      } else {
-   
+        return;
+    }
+
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     let closestPoint = null;
     let closestDistance = Infinity;
+
     raycaster.setFromCamera(mouse, camera);
 
-    // Check all particle systems (particles and cityParticleSystems)
-    const allParticles = [particles, ...cityParticleSystems]; // Combine single and city particle systems
+    const allParticles = [particles, ...cityParticleSystems];
 
     for (let system of allParticles) {
         const intersects = raycaster.intersectObject(system);
 
         if (intersects.length > 0) {
-            const index = intersects[0].index; // Get the index of the clicked particle
+            const index = intersects[0].index;
             const station = particleIndexMap.get(index);
             currentStationIndex = index;
 
-           if(!isDragging){
+            if (!isDragging) {
+                
 
-sphere1.visible = false;
-        sphere0.visible = false;
-           
                 if (station) {
-                console.log('Clicked Station:', station);
-                const material = station.material;
+                    console.log('Clicked Station:', station);
 
-                if (material instanceof THREE.PointsMaterial) {
-                   
-                    material.size *= 1.2; // Increase size to indicate selection
-                }
+                    const material = station.material;
+                    if (material instanceof THREE.PointsMaterial) {
+                        material.size *= 1.2;
+                    }
 
-          
-                if (station.url) {      // Load the audio stream from the station URL
-                  
-                    
-                    playBtn.src = "audioplayericons/blank.svg";
-                    playBtn.classList.add("disabledPlay2");
-                    updatePlayer(station);
-                    currentStation = station;
-                    updateStationHistory(currentStation);
-                    getMostRecentStations();
-                    toggleButtonVisibility();
-                    updateFavoritesList();
-                    wrangleHeart();
-                  
-                
-                   const worldPoint = intersects[0].point;
+                    if (station.url) {
+                        playBtn.src = "audioplayericons/blank.svg";
+                        playBtn.classList.add("disabledPlay2");
+                        updatePlayer(station);
+                        currentStation = station;
+                        updateStationHistory(currentStation);
+                        getMostRecentStations();
+                        toggleButtonVisibility();
+                        updateFavoritesList();
+                        wrangleHeart();
 
-                   // Convert world position to local space of the rotating globe
-                   const localPoint = sphereGroup.worldToLocal(worldPoint.clone());
-           
-                   let direction = localPoint.clone().normalize();
-                 direction = direction.multiplyScalar(102 + 0.05);
-                   wireframeCubeObject.position.copy(direction);
-                marker1.position.copy(direction);
-                marker2.position.copy(direction.multiplyScalar(1.03));
-                marker3.position.copy(direction.multiplyScalar(1.04));
-              
-               
-                 targetPosition = direction.clone().multiplyScalar(1.07);
-                 outerposition= direction.clone().multiplyScalar(5.07);
-                
-                
-                sphere0.position.copy(direction.multiplyScalar(1.07));
-                sphere1.position.copy(direction.multiplyScalar(1));
-                
-                markerMaterial1.opacity = 0;
-                markerMaterial2.opacity = 0;
-                markerMaterial3.opacity = 0;
-            
-                fadeInMarkers();
-
-                startmarkerFlashing();
-               
+                        
+                    }
                 }
             }
-
-
-        }}
-
-     sphereGroup.add(wireframeCubeObject);    
-     sphereGroup.add(atomGroup);
-     sphereGroup.add(marker1);
-     sphereGroup.add(marker2);
-     sphereGroup.add(marker3);
-     sphereGroup.add(sphere0);
-     sphereGroup.add(sphere1);
-   
-
-
+        }
     }
+
+   
 }
-}
+
+
 
        
 
@@ -805,6 +826,8 @@ function onMouseDown(event) {
 function onMouseMove(event) {
     if (!isDragging) return;
     if (isDragging && !boxclick){
+
+        isRotatingToTarget = false;
     const deltaX = event.clientX - previousMousePosition.x;
     const deltaY = event.clientY - previousMousePosition.y;
 
@@ -987,9 +1010,19 @@ function animate() {
 
 
    // console.log(sphere0.visible);
-   if(hoverCircle.visible == false){
+   
+   if (!hoverCircle.visible && !isRotatingToTarget) {
     sphereGroup.rotation.y += 0.001;
-   }
+}
+
+if (isRotatingToTarget) {
+    sphereGroup.quaternion.slerp(targetQuaternion, 0.08); // Smooth interpolation
+    const angleToTarget = sphereGroup.quaternion.angleTo(targetQuaternion);
+    if (angleToTarget < 0.001) {
+        sphereGroup.quaternion.copy(targetQuaternion);
+        isRotatingToTarget = false;
+    }
+}
 
    const minSize = 0.2;
    const maxSize = 0.8;
