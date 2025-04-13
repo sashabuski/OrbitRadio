@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+let firstsong = true;
+let dragged = false;
 let isRotatingToTarget = false;
 let targetQuaternion = new THREE.Quaternion();
 let outerposition;
@@ -197,6 +199,33 @@ particleGeometry = new THREE.BufferGeometry();
         scene.add(atomGroup);
         atomGroup.visible = false;
 
+        function getMostRecentStation() {
+            const HISTORY_KEY = "stationHistory";
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+        
+            return history[0] || null; // return null if there's no history
+        }
+      
+
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+        const recentStation = getMostRecentStation();
+        currentStation = recentStation;
+        updatePlayer(currentStation);
+toggleButtonVisibility();
+        updateFavoritesList(); 
+            highlightListItem();
+            wrangleHeart();
+        if (recentStation) {
+            console.log("Most recent station:", recentStation.name);
+        } else {
+            console.log("No station history found.");
+        }});
+
+
+
 // Convert latitude & longitude to 3D coordinates
 function latLonToCartesian(lat, lon, radius) {
     const phi = (90 - lat) * (Math.PI / 180);
@@ -300,11 +329,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (resizer) {
         resizer.addEventListener('mousedown', (e) => {
             isResizing = true;
-            startWidth = box.offsetWidth;
-            startHeight = box.offsetHeight;
-            startX = e.clientX;
-            startY = e.clientY;
-            e.preventDefault();
+
+    // Force positioning to keep top-left fixed during resize
+    const rect = box.getBoundingClientRect();
+    box.style.left = `${rect.left}px`;
+    box.style.top = `${rect.top}px`;
+    box.style.position = 'absolute';
+
+    startWidth = box.offsetWidth;
+    startHeight = box.offsetHeight;
+    startX = e.clientX;
+    startY = e.clientY;
+    e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -315,7 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let newHeight = startHeight + e.clientY - startY;
           
             // Set min/max limits
-            const minWidth = 200;  // Set your desired min width
+            const minWidth = 247;  // Set your desired min width
             const maxWidth = 600;  // Set your desired max width
             const minHeight = 250; // Set your desired min height
             const maxHeight = 700; // Set your desired max height
@@ -419,15 +455,17 @@ startmarkerFlashing();
     // Update the audio player
     audioPlayer.src = station.url;
     audioPlayer.load();
-    audioPlayer.play();
+  if(!firstsong){
+    audioPlayer.play(); 
+}
+
+ 
 
     // Wait until the audio is ready to play
     audioPlayer.oncanplay = () => {
         sphere1.visible = true;
         sphere0.visible = true;
         
-
-
 
 
 
@@ -477,7 +515,13 @@ startmarkerFlashing();
 
         stopmarkerFlashing();
        // toggleMarker4Flashing();
-        playBtn.src = "audioplayericons/pause.svg";
+       if(firstsong){
+        playBtn.src = "audioplayericons/play.svg";
+        }
+        else{
+            playBtn.src = "audioplayericons/pause.svg";
+        }
+
     };
 
     // Optional: handle error case
@@ -508,7 +552,7 @@ function togglePlay() {
     
     if (audioPlayer.paused) {
        
-       
+       firstsong = false;
         loadingIcon.style.display = 'block';
         audioPlayer.play();
         //toggleMarker4Flashing();
@@ -645,10 +689,13 @@ function getMostRecentStations(count = 5) {
             currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            
+            //revealHeart(listItem);
             listItem.style.backgroundColor = "#6D78D4";
             listItem.style.color = "#d896ed";
             currentlistitem = listItem;
+            const removeButton = listItem.querySelector('.remove-btn');
+           
+           
            
             updateFavoritesList(); 
             highlightListItem();
@@ -702,6 +749,9 @@ getMostRecentStations();
 
 // Raycasting for click detection
 function onClick(event) {
+    
+    if (dragged) return;
+    
     pulseVisible = false;
     material0.opacity = 0;
     material1.opacity = 0;
@@ -735,7 +785,7 @@ function onClick(event) {
 
                 if (station) {
                     console.log('Clicked Station:', station);
-
+                    firstsong = false;
                     const material = station.material;
                     if (material instanceof THREE.PointsMaterial) {
                         material.size *= 1.2;
@@ -794,6 +844,8 @@ let boxclick = false;
 
 function onMouseDown(event) {
     isDragging = true;
+
+    dragged = false;
    // console.log("mousedown:" + isDragging);
     const canvas = renderer.domElement;
     
@@ -827,12 +879,20 @@ function onMouseMove(event) {
     if (!isDragging) return;
     if (isDragging && !boxclick){
 
+        tooltip.style.visibility = "hidden";
+        tooltip.style.opacity = "0";
+        hoverCircle.visible = false;
         isRotatingToTarget = false;
     const deltaX = event.clientX - previousMousePosition.x;
     const deltaY = event.clientY - previousMousePosition.y;
 
-    sphereGroup.rotation.y += deltaX * 0.002;
-    sphereGroup.rotation.x += deltaY * 0.002;
+    const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized from 0 to 1
+    const rotationSpeed = 0.002 * (0.3 + 0.7 * distanceScale);
+    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+        dragged = true; // Mark as dragged if moved enough
+    }
+    sphereGroup.rotation.y += deltaX * rotationSpeed;
+    sphereGroup.rotation.x += deltaY * rotationSpeed;
 
     previousMousePosition = { x: event.clientX, y: event.clientY };
 }
@@ -918,11 +978,13 @@ nameText.style.animation = 'scrollText 15s linear infinite';
 
             let distance = raycaster.ray.distanceSqToPoint(particleWorldPosition); // Squared distance check
 
-            if (distance < 1) { // Threshold for detecting a "hit"
+            const distanceScale = (camera.position.z - 130) / (230 - 130); // 0 to 1
+            const hoverThreshold = 1 * (0.2 + 0.7 * distanceScale); // Smaller when zoomed in
+            
+            if (distance < hoverThreshold) {
                 if (distance < closestDistance) {
                     closestDistance = distance;
                     closestPoint = particleWorldPosition.clone();
-                    
                 }
             }
         }
@@ -996,6 +1058,19 @@ function onMouseUp() {
     
 }
 
+
+window.addEventListener('resize', () => {
+    // Update camera aspect ratio
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    // Update renderer size
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Optionally adjust pixel ratio again
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
 window.addEventListener('wheel', onWheel, false);
 window.addEventListener('mousedown', onMouseDown, false);
 window.addEventListener('mousemove', onMouseMove, false);
@@ -1012,7 +1087,9 @@ function animate() {
    // console.log(sphere0.visible);
    
    if (!hoverCircle.visible && !isRotatingToTarget) {
-    sphereGroup.rotation.y += 0.001;
+    const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized 0 to 1
+    const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);   // Slower when zoomed in
+    sphereGroup.rotation.y += autoRotateSpeed;
 }
 
 if (isRotatingToTarget) {
@@ -1290,7 +1367,7 @@ function loadLocalStations(localSearchResults) {
             updatePlayer(station);
             currentStation = station;
             
-           
+            firstsong = false;
             if(currentlistitem){
             currentlistitem.style.backgroundColor = "";
             currentlistitem.style.color = "";
@@ -1302,6 +1379,7 @@ function loadLocalStations(localSearchResults) {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
+           // revealHeart(listItem);
         });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
@@ -1342,6 +1420,22 @@ function loadLocalStations(localSearchResults) {
 
 
 getLocalStations();
+
+
+
+
+
+
+function revealHeart(listItem){
+    console.log("Jeessica");
+    const removeButton = listItem.querySelector('.remove-btn');
+    
+    //removeButton.display.height = 50;
+    removeButton.classList.add("revealHeart");
+   
+    console.log(removeButton);
+    console.log(removeButton.classList);
+}
 /*FAVOURITES 
 *
 *
@@ -1349,82 +1443,91 @@ getLocalStations();
 *
 *
 */
-
 function updateFavoritesList() {
     favorites = getFavoriteStations(); // Retrieve favorite stations from localStorage or cookies
-    const favoritesList = document.querySelector("#tab-1 .list"); // Select the list inside your tab
+    const favoritesList = document.querySelector("#tab-1 .list");
 
     favoritesList.innerHTML = ''; // Clear the existing list before updating
 
     favorites.forEach(station => {
-        // Ensure all required data exists and is not empty
         if (station && station.name && station.state && station.country) {
-            // Create list item
             const listItem = document.createElement("li");
             listItem.classList.add("list-item");
 
-
-          
-            // Apply styles if this station is the current station
-            if (currentStation && station.name === currentStation.name) {
-               
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
-            }
-
             listItem.addEventListener("click", () => {
-                if(currentlistitem){
+                if (currentlistitem) {
                     currentlistitem.style.backgroundColor = "";
                     currentlistitem.style.color = "";
-                    }
+                }
+
                 playBtn.src = "audioplayericons/blank.svg";
                 updatePlayer(station);
                 currentStation = station;
-                updateFavoritesList(); 
+                updateFavoritesList();
+
                 highlightListItem();
                 toggleButtonVisibility();
                 wrangleHeart();
+                firstsong = false;
             });
 
-            // Create a container for border control
+            // Wrapper for styling
             const contentWrapper = document.createElement("div");
             contentWrapper.classList.add("border-container");
 
-            // Create a div to wrap the text
             const textWrapper = document.createElement("div");
-
-            // Create station name text
             const stationName = document.createTextNode(station.name);
             textWrapper.appendChild(stationName);
 
-            // Create h2 element for state and country
             const locationText = document.createElement("h2");
             locationText.classList.add("locationtext");
-            if(station.state){
-                locationText.textContent = `${station.state}, ${station.country}`;
-               }else{
-                locationText.textContent = `${station.country}`;
-               }
+            locationText.textContent = station.state
+                ? `${station.state}, ${station.country}`
+                : station.country;
 
             textWrapper.appendChild(locationText);
 
-            // Create "X" button for removal
+            // Remove ("X") button with heart SVG
             const removeButton = document.createElement("button");
             removeButton.classList.add("remove-btn");
             removeButton.addEventListener("click", (event) => {
-                event.stopPropagation(); // prevents the list-item click event
+                event.stopPropagation(); // Don't trigger list-item click
                 removeFavorite(station);
-              });
+            });
 
-            // Append text and button to the content wrapper
+            const svgNS = "http://www.w3.org/2000/svg";
+            const heartSvg = document.createElementNS(svgNS, "svg");
+            heartSvg.setAttribute("class", "heart-svg2");
+            heartSvg.setAttribute("viewBox", "0 0 24 24");
+            heartSvg.setAttribute("width", "18");
+            heartSvg.setAttribute("height", "18");
+
+            const heartPath = document.createElementNS(svgNS, "path");
+            heartPath.setAttribute("d", "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 \
+            2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 \
+            16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 \
+            11.54L12 21.35z");
+            heartPath.setAttribute("fill", "rgba(109, 120, 212, 0.95)"); // ✅ Fixed missing )
+
+            heartSvg.appendChild(heartPath);
+            removeButton.appendChild(heartSvg);
+
             contentWrapper.appendChild(textWrapper);
             contentWrapper.appendChild(removeButton);
-
-            // Append the content wrapper to the list item
             listItem.appendChild(contentWrapper);
-
-            // Append the list item to the favorites list
             favoritesList.appendChild(listItem);
+
+            // ✅ Apply current station styles *after* insertion
+            if (currentStation && station.name === currentStation.name) {
+                // Force reflow to allow transition to work
+                void removeButton.offsetWidth;
+
+                removeButton.style.opacity = 1;
+                removeButton.style.pointerEvents = "all";
+
+                listItem.style.backgroundColor = "#6D78D4";
+                listItem.style.color = "#d896ed";
+            }
         }
     });
 }
@@ -1651,8 +1754,11 @@ volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value / 100;
     if (volumeSlider.value == 0){
        // console.log("3");
+       
         volumeBtn.classList.add('muted');
     }else{
+        audioPlayer.muted = false;
+        preMuteValue =  audioPlayer.volume;
         //console.log("4");
         volumeBtn.classList.remove('muted');
     }
@@ -1871,7 +1977,7 @@ const loadingSpinner = document.getElementById("loading-spinner");
 
 async function filterList() {
     const query = document.getElementById("search-box").value.trim().toLowerCase();
-
+    nothingFound.style.display = "none";
     const searchBox = document.getElementById("search-box");
 
     if (searchBox.value.trim() === "") {
@@ -1911,20 +2017,28 @@ async function filterList() {
 
         const stations = await response.json();
 
-        let filtered = stations.filter(station =>
-            station.url && (
-                new RegExp(`\\b${query}\\w*`, 'i').test(station.name) ||
-                new RegExp(`\\b${query}\\w*`, 'i').test(station.state?.toLowerCase()) ||
-                new RegExp(`\\b${query}\\w*`, 'i').test(station.country?.toLowerCase())
-            )
-        );
+        
+        const words = query.split(/\s+/);
+
+        let filtered = stations.filter(station => {
+            if (!station.url) return false;
+        
+            const haystack = `${station.name} ${station.state || ""} ${station.country || ""}`.toLowerCase();
+        
+            return words.every(word => haystack.includes(word));
+        });
+        
         
         // Then remove duplicates by name
         searchResults = filtered.filter((station, index, self) =>
             index === self.findIndex(s => s.name === station.name)
         );
-        
-
+        if (searchResults.length === 0) {
+           const nothingFound = document.getElementById("nothingFound");
+           nothingFound.style.display = "flex";
+           loadingSpinner.style.display = "none";
+        }
+        console.log(JSON.stringify(searchResults));
         console.log("searching stations;");
         renderedCount = 0;
         updateSearchResults([]); // Clear previous
@@ -1978,6 +2092,8 @@ function updateSearchResults(results, append = false) {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
+            //revealHeart(listItem);
+            firstsong = false;
         });
 
         const contentWrapper = document.createElement("div");
@@ -2144,6 +2260,8 @@ function loadMoreGenreStations() {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
+           // revealHeart(listItem);
+            firstsong = false;
         });
        // console.log("4");
         const contentWrapper = document.createElement("div");
@@ -2310,6 +2428,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sphere0.visible = false;
     sphere1.visible = false;
 });
+
 
 
 // Generate the list on page load
