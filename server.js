@@ -19,6 +19,7 @@ try {
     stations = []; // fallback to empty array if loading fails
 }
 
+// API Routes
 // Route to get all stations
 app.get("/stations", (req, res) => {
     res.json(stations);
@@ -39,6 +40,14 @@ app.get("/stations/:uuid", (req, res) => {
 // Health check or welcome route
 app.get("/", (req, res) => {
     res.json({ message: "API is working!" });
+});
+
+// Serve static frontend files from the 'public' folder
+app.use(express.static(path.join(__dirname, "public")));
+
+// Catch-all route to return index.html for any other route
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Start the server
