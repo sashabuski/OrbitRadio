@@ -289,7 +289,7 @@ function latLonToCartesian(lat, lon, radius) {
 // Fetch station data
 async function fetchStationsFromAPI(limit = 500000) {
     try {
-        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations"); // Fetch from API
+        const response = await fetch("https://orbitradio.onrender.com/stations"); // Fetch from API
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -1379,7 +1379,7 @@ async function getLocalStations(){
     });
     
     try {
-        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations");
+        const response = await fetch("https://orbitradio.onrender.com/stations");
         const stations = await response.json();
        // console.log("v2"+stations[2]);
         
@@ -2083,7 +2083,7 @@ async function filterList() {
     loadingSpinner.style.display = "block";
 
     try {
-        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations", {
+        const response = await fetch("https://orbitradio.onrender.com/stations", {
             signal: abortController.signal
         });
 
@@ -2269,7 +2269,7 @@ async function showGenreStationList(selectedTag) {
     genreListActive = true;
 
     try {
-        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations");
+        const response = await fetch("https://orbitradio.onrender.com/stations");
         const stations = await response.json();
        // console.log("v2"+stations[2]);
         
