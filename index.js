@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+
+
+const maxCameraZ = 230;
 let firstsong = true;
 let dragged = false;
 let isRotatingToTarget = false;
@@ -68,6 +71,8 @@ scene.add(new THREE.AmbientLight(0x404040));
 const volumeSlider = document.getElementById("volume-slider");
 let firstStation = 1;
 
+const markerGroup = new THREE.Group();
+scene.add(markerGroup);
 
 
 
@@ -109,6 +114,49 @@ const markerMaterial3 = new THREE.LineBasicMaterial({ color: 0x8670cd, opacity: 
 const marker3 = new THREE.LineSegments(markerWireframe3, markerMaterial3);
 scene.add(marker3);
 
+
+
+
+
+
+
+  
+const geometry0 = new THREE.SphereGeometry(0.1, 32, 32);
+const material0 = new THREE.MeshBasicMaterial({
+  color: 0x8670cd,
+  wireframe: true,
+  transparent: true,
+  opacity: 1,
+  depthWrite: false
+});
+const sphere0 = new THREE.Mesh(geometry0, material0);
+//  sphere0.position.y = yPos;
+scene.add(sphere0);
+
+
+
+
+
+const geometry1 = new THREE.SphereGeometry(0.1, 32, 32);
+const material1 = new THREE.MeshBasicMaterial({
+  color: 0x6d78d4,
+  wireframe: true,
+  transparent: true,
+  opacity: 0,
+  depthWrite: false
+});
+const sphere1 = new THREE.Mesh(geometry1, material1);
+//  sphere1.position.y = yPos;
+scene.add(sphere1);
+material0.opacity = 0;
+material1.opacity = 0;
+
+
+markerGroup.add(marker1);
+markerGroup.add(marker2);
+markerGroup.add(marker3);
+markerGroup.add(sphere0);
+markerGroup.add(sphere1);
 let isDragging;
 
 const markerGeometry4 = new THREE.SphereGeometry(3.1, 16, 16); // radius, width segments, height segments
@@ -241,7 +289,7 @@ function latLonToCartesian(lat, lon, radius) {
 // Fetch station data
 async function fetchStationsFromAPI(limit = 500000) {
     try {
-        const response = await fetch('http://localhost:3000/stations'); // Fetch from API
+        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations"); // Fetch from API
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -836,6 +884,7 @@ function onWheel(event) {
     if (event.target.tagName == "CANVAS"){
         targetZ += event.deltaY * zoomSpeed;
         targetZ = Math.max(105, Math.min(230, targetZ));
+        updateDynamicScale();
     }
   
 }
@@ -1078,10 +1127,33 @@ window.addEventListener('mousemove', onMouseMoveRaycast, false);
 window.addEventListener('mouseup', onMouseUp, false);
 
 // Animation Loop
+
+
+function updateDynamicScale() {
+    const scaleFactor = camera.position.z / maxCameraZ;
+
+    // Animate with GSAP to new scale
+    gsap.to(marker1.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+    gsap.to(marker2.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+    gsap.to(marker3.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+   // gsap.to(sphere0.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+   // gsap.to(sphere1.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+}
+
+
 function animate() {
     requestAnimationFrame(animate);
     camera.position.z += (targetZ - camera.position.z) * 0.1;
    
+    const minScale = 0.1;  // How small it gets at closest zoom
+const maxScale = 1.0;  // Full size at max zoom (230)
+const zoomRange = maxCameraZ - 105; // your min zoom is 105
+
+const normalizedZoom = (camera.position.z - 105) / zoomRange; // 0 (close) to 1 (far)
+const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
+
+markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
 
 
    // console.log(sphere0.visible);
@@ -1307,7 +1379,7 @@ async function getLocalStations(){
     });
     
     try {
-        const response = await fetch("http://localhost:3000/stations");
+        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations");
         const stations = await response.json();
        // console.log("v2"+stations[2]);
         
@@ -2011,7 +2083,7 @@ async function filterList() {
     loadingSpinner.style.display = "block";
 
     try {
-        const response = await fetch("http://localhost:3000/stations", {
+        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations", {
             signal: abortController.signal
         });
 
@@ -2197,7 +2269,7 @@ async function showGenreStationList(selectedTag) {
     genreListActive = true;
 
     try {
-        const response = await fetch("http://localhost:3000/stations");
+        const response = await fetch("https://orbitradio.netlify.app/.netlify/functions/api/stations");
         const stations = await response.json();
        // console.log("v2"+stations[2]);
         
@@ -2352,36 +2424,6 @@ function generateTagList() {
 
 
 
-  
-const geometry0 = new THREE.SphereGeometry(0.1, 32, 32);
-const material0 = new THREE.MeshBasicMaterial({
-  color: 0x8670cd,
-  wireframe: true,
-  transparent: true,
-  opacity: 1,
-  depthWrite: false
-});
-const sphere0 = new THREE.Mesh(geometry0, material0);
-//  sphere0.position.y = yPos;
-scene.add(sphere0);
-
-
-
-
-
-const geometry1 = new THREE.SphereGeometry(0.1, 32, 32);
-const material1 = new THREE.MeshBasicMaterial({
-  color: 0x6d78d4,
-  wireframe: true,
-  transparent: true,
-  opacity: 0,
-  depthWrite: false
-});
-const sphere1 = new THREE.Mesh(geometry1, material1);
-//  sphere1.position.y = yPos;
-scene.add(sphere1);
-material0.opacity = 0;
-material1.opacity = 0;
 
 // Create two spheres
 
