@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 3000;
 
 
 app.use(cors({
-    origin: 'https://orbitradio96.onrender.com'  // Allow only your frontend
-  }));
+  origin: 'https://orbitradio96.onrender.com'  // Allow only your frontend
+}));
 // Load JSON data
 let stations;
 try {
