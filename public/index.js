@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { countryNames } from './countries.js';
 
-
-
+let stationsMaster = [];
+let title = true;
 let currentTab = "home";
 const maxCameraZ = 230;
 let firstsong = true;
@@ -296,16 +296,20 @@ async function fetchStationsFromAPI(limit = 500000) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        const stations = await response.json();
-        const filteredStations = stations.filter(station => station.state);
+        stationsMaster = await response.json();
+        const filteredStations = stationsMaster.filter(stationsMaster => stationsMaster.state);
 
         stationsList.push(...filteredStations.slice(0, limit));
         addStationsAsParticles(); // Call function after fetching data
-
+       await dataLoaded();
         console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
         console.error('Error fetching stations from API:', error);
     }
+}
+
+async function dataLoaded(){
+    await getLocalStations();
 }
 
 
@@ -1203,8 +1207,8 @@ const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
-
-
+//console.log("previuos:" + previousscrollposition);
+//console.log(contentDiv.scrollTop);
    // console.log(sphere0.visible);
    
    if (!hoverCircle.visible && !isRotatingToTarget) {
@@ -1408,64 +1412,41 @@ window.onresize = startScrolling1;
  * 
  * 
  * 
- */
-
-async function getLocalStations(){
+ */async function getLocalStations() {
     const stationList = document.querySelector('#tab-3 .list');
-    let countrycode; 
     let localSearchResults;
     const localloadingspinner = document.getElementById("local-loading-spinner");
     localloadingspinner.style.display = "block";
-    fetch('https://ipinfo.io?token=103b79e365df36')
-    .then(response => response.json())
-    .then(data => {
-      countrycode = data.country;
-      document.getElementById('country').textContent = country;
-    })
-    .catch(error => {
-      console.error('Error fetching location data:', error);
-      document.getElementById('country').textContent = 'Could not determine your country.';
-    });
-    
+
     try {
-        const response = await fetch("https://orbitradio.onrender.com/stations");
-        const stations = await response.json();
-       // console.log("v2"+stations[2]);
-        
-       localSearchResults = stations
-    .filter(station =>
-        station.url &&
-        station.countrycode == countrycode
-    )
-    .filter((station, index, self) =>
-        index === self.findIndex(s => s.name === station.name)
-    );
+        const locationResponse = await fetch('https://ipinfo.io?token=103b79e365df36');
+        const locationData = await locationResponse.json();
+        const countrycode = locationData.country;
+     //   document.getElementById('country').textContent = countrycode;
+
+        localSearchResults = stationsMaster
+            .filter(station =>
+                station.url &&
+                station.countrycode === countrycode
+            )
+            .filter((station, index, self) =>
+                index === self.findIndex(s => s.name === station.name)
+            );
 
         if (localSearchResults.length === 0) {
             const li = document.createElement('li');
-          //  console.log("v7");
             li.textContent = "No stations found for this genre.";
             stationList.appendChild(li);
         } else {
             loadLocalStations(localSearchResults);
-             // Load initial batch
         }
-
-        
 
     } catch (error) {
         console.error("Error fetching genre stations:", error);
+       // document.getElementById('country').textContent = 'Could not determine your country.';
     } finally {
-        loadingSpinner2.style.display = "none";
+        localloadingspinner.style.display = "none";
     }
-
-
-
-
-
-
-
-
 }
 
 
@@ -1628,7 +1609,7 @@ function updateFavoritesList() {
             2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 \
             16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 \
             11.54L12 21.35z");
-            heartPath.setAttribute("fill", "rgba(109, 120, 212, 0.95)"); // ✅ Fixed missing )
+           // heartPath.setAttribute("fill", "rgba(109, 120, 212, 0.95)"); // ✅ Fixed missing )
 
             heartSvg.appendChild(heartPath);
             removeButton.appendChild(heartSvg);
@@ -2081,100 +2062,74 @@ async function countTags() {
 countTags();
 
 */
+function debounce(func, delay) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+  }
+  
+
 
 let searchResults = [];
 let renderedCount = 0;
-const RESULTS_PER_BATCH = 20; // or whatever batch size you use
-let abortController = null;
+const RESULTS_PER_BATCH = 20;
 
 document.addEventListener("DOMContentLoaded", () => {
     const searchBox = document.getElementById("search-box");
     if (searchBox) {
-        searchBox.addEventListener("keyup", filterList);
+        searchBox.addEventListener("keyup", debounce(filterList, 250));
     }
 });
 
 const loadingSpinner = document.getElementById("loading-spinner");
+const nothingFound = document.getElementById("nothingFound"); // moved out for reuse
 
 async function filterList() {
     const query = document.getElementById("search-box").value.trim().toLowerCase();
     nothingFound.style.display = "none";
-    const searchBox = document.getElementById("search-box");
-
-    if (searchBox.value.trim() === "") {
-        // The search box is empty
-        if (abortController) {
-            abortController.abort();
-        }
-       
-        console.log("Search box is empty.");
-    } else {
-        // The search box is not empty
-        console.log("Search box has input.");
-    }
 
     if (!query) {
+        // Search is empty
         searchResults = [];
         renderedCount = 0;
         updateSearchResults([]);
-        loadingSpinner.style.display = "none"; // Hide spinner if query is empty
+        loadingSpinner.style.display = "none";
         return;
     }
 
-    // Abort previous request if it's still pending
-    if (abortController) {
-        abortController.abort();
-    }
-
-    abortController = new AbortController();
-
-    // Show spinner immediately when starting new request
     loadingSpinner.style.display = "block";
 
-    try {
-        const response = await fetch("https://orbitradio.onrender.com/stations", {
-            signal: abortController.signal
-        });
+    // Split query into individual words for AND-matching
+    const words = query.split(/\s+/);
 
-        const stations = await response.json();
+    // Filter using stationsMaster
+    let filtered = stationsMaster.filter(station => {
+        if (!station.url) return false;
 
-        
-        const words = query.split(/\s+/);
+        const haystack = `${station.name} ${station.state || ""} ${station.country || ""}`.toLowerCase();
+        return words.every(word => haystack.includes(word));
+    });
 
-        let filtered = stations.filter(station => {
-            if (!station.url) return false;
-        
-            const haystack = `${station.name} ${station.state || ""} ${station.country || ""}`.toLowerCase();
-        
-            return words.every(word => haystack.includes(word));
-        });
-        
-        
-        // Then remove duplicates by name
-        searchResults = filtered.filter((station, index, self) =>
-            index === self.findIndex(s => s.name === station.name)
-        );
-        if (searchResults.length === 0) {
-           const nothingFound = document.getElementById("nothingFound");
-           nothingFound.style.display = "flex";
-           loadingSpinner.style.display = "none";
-        }
-        console.log(JSON.stringify(searchResults));
-        console.log("searching stations;");
-        renderedCount = 0;
-        updateSearchResults([]); // Clear previous
-        loadMoreResults();       // Load first batch
+    // Remove duplicates by name
+    searchResults = filtered.filter((station, index, self) =>
+        index === self.findIndex(s => s.name === station.name)
+    );
 
-    } catch (error) {
-        if (error.name !== "AbortError") {
-            console.error("Error fetching stations:", error);
-        }
-    } finally {
-        // Make sure the spinner only hides after new data is loaded or error is caught
-        if (searchResults.length > 0) {
-            loadingSpinner.style.display = "none";
-        }
+    if (searchResults.length === 0) {
+        nothingFound.style.display = "flex";
+        loadingSpinner.style.display = "none";
+        updateSearchResults([]);
+        return;
     }
+
+    console.log("Filtered results:", searchResults);
+    renderedCount = 0;
+    updateSearchResults([]);
+    loadMoreResults();
+
+    loadingSpinner.style.display = "none";
 }
 
 
@@ -2259,13 +2214,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
+
 function genreBack() {
     const container = document.getElementById('genre-container');
     const backbutton = document.getElementById('backbutton');
     const content = document.querySelector(".content");
-    backbutton.style.display = "none"; 
+   
+
+    backbutton.style.opacity = "0";
+    backbutton.style.pointerEvents = "none";
+      
+      // Optionally remove it completely after fade
+      setTimeout(() => {
+        backbutton.style.display = "none";
+      }, 300);
     container.style.transform = 'translateX(0%)';
-    backbutton.style.transform = 'translateX(0%)';
+    
     // Clear list if needed (e.g., clearing the list inside the container)
     const stationList = document.getElementById('genreStationList');
     stationList.innerHTML = '';  // Clears the list content
@@ -2284,7 +2249,8 @@ contentDiv.addEventListener("scroll", () => {
             loadMoreResults();
        }
        if(currentTab == "discover"){
-        loadCountrySearchResults();
+       
+        loadCountrySearchResults(title);
    }
         
     }
@@ -2317,9 +2283,18 @@ async function showGenreStationList(selectedTag) {
     stationList.innerHTML = '';
     backbuttontext.textContent = selectedTag;
     container.style.transform = 'translateX(-50%)';
-     backbutton.style.transform = 'translateX(-100%)';
+     
+     
      setTimeout(() => {
-        loadingSpinner2.style.display = "block";
+        requestAnimationFrame(() => {
+            backbutton.style.opacity = "1";
+            backbutton.style.pointerEvents = "all";
+          });
+         }, 100);
+         
+     
+     setTimeout(() => {
+       // loadingSpinner2.style.display = "block";
     }, 300);
    // console.log("1");
     genreRenderedCount = 0;
@@ -2327,11 +2302,11 @@ async function showGenreStationList(selectedTag) {
     genreListActive = true;
 
     try {
-        const response = await fetch("https://orbitradio.onrender.com/stations");
-        const stations = await response.json();
+      //  const response = await fetch("http://localhost:3000/stations");
+       // const stations = await response.json();
        // console.log("v2"+stations[2]);
         
-        genreSearchResults = stations
+        genreSearchResults = stationsMaster
     .filter(station =>
         station.url &&
         typeof station.tags === 'string' &&
@@ -2345,7 +2320,7 @@ async function showGenreStationList(selectedTag) {
     );
 
        
-
+    loadMoreGenreStations();
         
 
     } catch (error) {
@@ -2422,7 +2397,8 @@ if(firstStation == 1){
         }
         stationList.appendChild(listItem);
     });
-
+    document.getElementById("loading-spinner2").style.display = "none";
+    document.getElementById("loading-spinner2").style.pointerEvents = "none"
     genreRenderedCount += nextBatch.length;
 }
 
@@ -2475,35 +2451,213 @@ function generateTagList() {
 }
 
 
+document.addEventListener('DOMContentLoaded', () => {
+
+    document.getElementById('countriesbutton').addEventListener('click', () => {
+        title = false;
+        document.getElementById("countrybackbuttontext").textContent = "Discover"
+        const stationList = document.getElementById('panel2list');
+        stationList.innerHTML = '';  // Clears the list content
+        
+        openCountryList();
+     });
+
+});
+
+function openCountryList(){
+    const countrybackbutton = document.getElementById("countrybackbutton");
+    const countrybackbuttontext = document.getElementById("countrybackbuttontext");
+   const container = document.getElementById("countriesContainer");
+   
+  
+   setTimeout(() => {
+    document.getElementById("country3list").style.display = "none";
+  }, 300);
+
+   
+   container.style.transform = "translateX(-33.33%)"
+   generateCountryList();
+  // countrybackbuttontext.textContent = country;
+   //content.scrollTop = 0;
+   countrybackbutton.style.display = "block"; // or "block" depending on layout
+
+   // Allow a slight delay if needed to ensure layout updates
+   setTimeout(() => {
+ requestAnimationFrame(() => {
+     countrybackbutton.style.opacity = "1";
+     countrybackbutton.style.pointerEvents = "all";
+   });
+  }, 100);
+  
+}
+
+const countryListContainer = document.getElementById('panel2list');
 
 
+
+
+/* 
+function generateCountryList() {
+    const sortedNames = countryNames.sort();
+
+    sortedNames.forEach(country => {
+        const listItem = document.createElement('li');
+        listItem.classList.add('list-item', 'genre');
+
+        const capitalisedCountry = formatCountryName(country);
+
+        // Create a wrapper for the left text (country name)
+        const textSpan = document.createElement('span');
+        textSpan.textContent = capitalisedCountry;
+        listItem.appendChild(textSpan);
+
+        // Calculate number of stations for this country
+        const stationCount = stationsMaster.filter(station =>
+            station.country.toLowerCase() === country.toLowerCase()
+        ).length;
+
+        // Create blue circle with number
+        const circle = document.createElement('span');
+        circle.classList.add('blue-circle');
+        circle.textContent = stationCount;
+        listItem.appendChild(circle);
+
+        // Create arrow icon
+        const arrowSpan = document.createElement('span');
+        arrowSpan.classList.add('arrow');
+
+        const arrowImg = document.createElement('img');
+        arrowImg.src = 'sidearrow.svg';
+        arrowImg.alt = 'arrow';
+        arrowImg.width = 16;
+        arrowImg.height = 16;
+
+        arrowSpan.appendChild(arrowImg);
+        listItem.appendChild(arrowSpan);
+
+        // Click event
+        listItem.addEventListener('click', () => {
+            fetchStationsByCountry(country, false);
+        });
+
+        countryListContainer.appendChild(listItem);
+    });
+}
+
+*/
+
+function generateCountryList() {
+    const sortedCountries = countryNames.sort((a, b) => 
+        a.name.localeCompare(b.name)
+    );
+
+    sortedCountries.forEach(({ name, count }) => {
+        const listItem = document.createElement('li');
+        listItem.classList.add('list-item', 'countryspacing');
+
+        const capitalisedCountry = formatCountryName(name);
+
+        // Left side: Country name
+        const textSpan = document.createElement('span');
+        textSpan.textContent = capitalisedCountry;
+        listItem.appendChild(textSpan);
+
+        // Right side (circle and arrow)
+        const rightSide = document.createElement('span');
+        rightSide.classList.add('right-side');
+
+        const circle = document.createElement('span');
+        circle.classList.add('blue-circle');
+        circle.textContent = count;
+        rightSide.appendChild(circle);
+
+        const arrowSpan = document.createElement('span');
+        arrowSpan.classList.add('arrow');
+
+        const arrowImg = document.createElement('img');
+        arrowImg.src = 'sidearrow.svg';
+        arrowImg.alt = 'arrow';
+        arrowImg.width = 16;
+        arrowImg.height = 16;
+
+        arrowSpan.appendChild(arrowImg);
+        rightSide.appendChild(arrowSpan);
+
+        listItem.appendChild(rightSide);
+
+        // Click event for fetching country stations
+        listItem.addEventListener('click', () => {
+            fetchStationsByCountry(name, false);
+        });
+
+        // Append to container
+        countryListContainer.appendChild(listItem);
+    });
+}
 
 let countrySearchResults = [];
 let countryRenderedCount = 0;
 const COUNTRY_RESULTS_PER_BATCH = 20;
 
-
+let previousscrollposition; 
 
 async function fetchStationsByCountry(country, title) {
    
     const countrybackbutton = document.getElementById("countrybackbutton");
     const countrybackbuttontext = document.getElementById("countrybackbuttontext");
-   const container = document.getElementById("countriesContainer");
-   container.style.transform = "translateX(-33.33%)"
+    const container = document.getElementById("countriesContainer");
+   
+    const content = document.getElementById("content");
+    
+   // document.getElementById("country1list").style.display = "none";
+    //document.getElementById("country2list").style.display = "none";
+    
+
+
+
+   if(!title){
+   
+    previousscrollposition = content.scrollTop;
+    container.style.transform = "translateX(-66.66%)"
+    setTimeout(() => {
+        document.getElementById("panel2list").innerHTML = "";
+       
+        content.scrollTop = 0;
+      }, 300);
+    backhome = false;
+   }else{
+
+   
+    container.style.transform = "translateX(-33.33%)" 
+    setTimeout(() => {
+        document.getElementById("country3list").style.display = "none";
+        content.scrollTop = 0;
+      }, 300);
+   }
+   
+   
+   
    countryRenderedCount = 0;
-   countrybackbuttontext.textContent = country;
+   countrybackbuttontext.textContent = formatCountryName(country);
    //content.scrollTop = 0;
    countrybackbutton.style.display = "block";
-   countrybackbutton.style.pointerEvents = "all";
+   setTimeout(() => {
+    requestAnimationFrame(() => {
+        countrybackbutton.style.opacity = "1";
+        countrybackbutton.style.pointerEvents = "all";
+      });
+     }, 100);
+
+   
    
    //countryListActive = true;
    
     try {
      
-        const response = await fetch("https://orbitradio.onrender.com/stations");
-        const stations = await response.json();
+       // const response = await fetch("http://localhost:3000/stations");
+      //  const stations = await response.json();
         console.log("0"+country);
-        countrySearchResults = stations
+        countrySearchResults = stationsMaster
             .filter(station =>
                 station.url &&          
                 station.country.toLowerCase().trim() === country.toLowerCase().trim()
@@ -2511,13 +2665,13 @@ async function fetchStationsByCountry(country, title) {
             .filter((station, index, self) =>
                 index === self.findIndex(s => s.name === station.name)
             );
-            console.log("1"+stations[0].country);
+          //  console.log("1"+stations[0].country);
 
 
             if (countrySearchResults.length === 0) {
                 console.log("nothing found");
             } else {
-                loadCountrySearchResults();
+                loadCountrySearchResults(title);
                  // Load initial batch
             }
         
@@ -2536,25 +2690,90 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function countryBack() {
-    const container = document.getElementById('countriesContainer');
-    const backbutton = document.getElementById('countrybackbutton');
-    const content = document.querySelector(".content");
-    backbutton.style.display = "none"; 
-    container.style.transform = 'translateX(0%)';
-   // backbutton.style.transform = 'translateX(0%)';
-    // Clear list if needed (e.g., clearing the list inside the container)
-    const stationList = document.getElementById('panel2list');
-    stationList.innerHTML = '';  // Clears the list content
-   
-   
-    content.scrollTop = 0;
+
+
+function scrollToCountry(countryName) {
+    const container = document.querySelector('.content');
+    const listItems = container.querySelectorAll('#panel2list .list-item');
+
+    for (const item of listItems) {
+        const text = item.querySelector('span')?.textContent?.trim().toLowerCase();
+        if (text === countryName.toLowerCase()) {
+            item.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest',
+            });
+            break;
+        }
+    }
 }
 
 
-function loadCountrySearchResults(){
+
+
+let backhome = true;
+
+function countryBack() {
+    const container = document.getElementById('countriesContainer');
+    const countrybackbutton = document.getElementById('countrybackbutton');
+    const backbuttontext = document.getElementById('countrybackbuttontext');
+    const content = document.querySelector(".content");
+  
+   if(backhome){
+    //document.getElementById("country1list").style.display = "block";
+//document.getElementById("country2list").style.display = "block";
+document.getElementById("country3list").style.display = "block";
+    container.style.transform = 'translateX(0%)'; 
+    content.scrollTop = 0;
+    setTimeout(() => {
+        document.getElementById("panel2list").innerHTML = "";
+       
+      }, 300);
+     
+     
+      countrybackbutton.style.opacity = "0";
+      countrybackbutton.style.pointerEvents = "none";
+      
+      // Optionally remove it completely after fade
+      setTimeout(() => {
+        countrybackbutton.style.display = "none";
+      }, 300);
+    countrySearchResults = [];
+   }
+   else{
+    openCountryList();
+       
+    container.style.transform = 'translateX(-33.33%)';
+   // content.scrollTop = 0;
     
+        document.getElementById("panel3list").innerHTML = "";
+      
+      
+
+     
+   
+        content.scrollTop = previousscrollposition;
+     
+    countrySearchResults = [];
+   
+    countrySearchResults
+    backbuttontext.textContent = "Discover"
+    backhome = true;
+   
+   }
+   // backbutton.style.transform = 'translateX(0%)';
+    // Clear list if needed (e.g., clearing the list inside the container)
+   
+   
+   
+
+}
+
+
+function loadCountrySearchResults(title){
     
+ 
   
         const panel2list = document.getElementById('panel2list');
  
@@ -2563,7 +2782,7 @@ function loadCountrySearchResults(){
    
    
     const nextBatch = countrySearchResults.slice(countryRenderedCount, countryRenderedCount + COUNTRY_RESULTS_PER_BATCH);
-    //console.log("3");
+   console.log(nextBatch);
    
 
     nextBatch.forEach(station => {
@@ -2626,11 +2845,11 @@ if(firstStation == 1){
             }
         }
        
-       // if(title){
+        if(title){
             panel2list.appendChild(listItem);
-      // }else{
-      //      panel3list.appendChild(listItem);
-      // }
+       }else{
+            panel3list.appendChild(listItem);
+       }
         
     });
 
@@ -2711,10 +2930,10 @@ async function getCountryStations(country, header, list){ {
     header.textContent = formatCountryName(country);
 
     try {
-        const response = await fetch("https://orbitradio.onrender.com/stations");
-        const stations = await response.json();
+      //  const response = await fetch("http://localhost:3000/stations");
+      //  const stations = await response.json();
 
-        const countrySearchResults = stations
+        const countrySearchResults = stationsMaster
             .filter(station =>
                 station.url &&
                 station.country.toLowerCase() === country.toLowerCase()
@@ -2829,10 +3048,10 @@ function loadCountryStations(countrySearchResults, list) {
 
 
 
-function getThreeRandomCountries() {
+async function getThreeRandomCountries() {
     const shuffled = [...countryNames].sort(() => 0.5 - Math.random());
-    const [country1, country2, country3] = shuffled;
-   
+    const [{ name: name1 }, { name: name2 }, { name: name3 }] = shuffled;
+
     const header1 = document.getElementById('country1header');
     const list1 = document.getElementById('country1list');
 
@@ -2842,27 +3061,30 @@ function getThreeRandomCountries() {
     const header3 = document.getElementById('country3header');
     const list3 = document.getElementById('country3list');
 
-
-    getCountryStations(country1, header1, list1);
-    getCountryStations(country2, header2, list2);
-    getCountryStations(country3, header3, list3);
-  }
-  
+    getCountryStations(name1, header1, list1);
+    getCountryStations(name2, header2, list2);
+    getCountryStations(name3, header3, list3);
+}
 
   
-document.addEventListener("DOMContentLoaded", () => {
-    getThreeRandomCountries();
-    const countryDivs = document.querySelectorAll('.border-container-countries');
 
+  
+  document.addEventListener("DOMContentLoaded", async () => {
+    await fetchStationsFromAPI(); // Wait until stationsMaster is filled
+    getThreeRandomCountries();    // Now safe to run this
+
+    const countryDivs = document.querySelectorAll('.spider');
     countryDivs.forEach(div => {
-    div.addEventListener('click', function () {
-      const countryName = this.textContent;
-    fetchStationsByCountry(countryName, true);
-        
-      // You can do something with countryName here
+        div.addEventListener('click', function () {
+            title = true;
+            const stationList = document.getElementById('panel2list');
+            stationList.innerHTML = '';
+            const countryName = this.textContent;
+            fetchStationsByCountry(countryName, true);
+        });
     });
-  });
 });
+
 
 // Generate the list on page load
 generateTagList();

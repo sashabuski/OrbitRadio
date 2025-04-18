@@ -43,7 +43,7 @@
        
        
       </div>
-
+<div style="z-index: 0;">
       <img id="image-overlay" src="logo/ologo.png" alt="Overlay Image">
       <img class="image-overlay2" src="logo/star1.png" alt="Overlay Image">
       <img class="image-overlay2" src="logo/star2.png" alt="Overlay Image">
@@ -70,7 +70,7 @@
       <img class="image-overlay2" src="logo/eye2.png" alt="Overlay Image">
       <img class="image-overlay2" src="logo/eye3.png" alt="Overlay Image">
       <img class="image-overlay2" src="logo/eye4.png" alt="Overlay Image">
-    
+    </div>
       
       <div class="anchored-bottom-center">
         
@@ -158,7 +158,7 @@
           <button class="tab-button" "><img src="icon/explore.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Tags</div></button>
           <button class="tab-button" "><img src="icon/planet.png" alt="Tab 2 Icon" style="width: 20px; height: 20px;margin-top: 6px; margin-right: 0px;"><div class = "catHeader">Discover</div></button>
         </div>
-        <div class="content">
+        <div id = "content" class="content">
           <div id="tab-1" class="tab-content">
             
             <ul class="list">
@@ -209,12 +209,14 @@
             
             </ul>
             <!--<div style=" outline: 1px solid var(--box-outline-color); background: #e8e8e8; width: calc(100% - 30px); border-radius: 5px;margin-left: 5px;margin-right: 5px;">-->
-            <div class = "homepagetitle"> Local stations<div id="local-loading-spinner" style="
+            
+            
+            <div class = "homepagetitle" style="display: flex; margin-top: 35px; padding-bottom: 10px"> Local stations<div id="local-loading-spinner" style="
              
               position: relative;
-              top: -60%;
-              left: 85%;
-    
+            
+              left: calc(100% - 210px);
+              bottom: -5px;
               width: 30px;
               height: 30px;
           ">
@@ -230,7 +232,7 @@
          
           <div id="tab-4" class="tab-content hidden" style="overflow: hidden; clip: rect(0, auto, auto, 0);">
             
-            <div id="backbutton" class="genre backbutton list-item" style="display: none; transform: translateX(-100%);">
+            <div id="backbutton" class="genre backbutton" style="display: none; transform: translateX(-100%);">
               <span class="backarrow"><img src="sidearrow.svg" alt="arrow" width="16" height="16"></span>
               <div id="backbuttontext">---</div>
           </div>
@@ -262,9 +264,9 @@
           </div>
           
           <div id="tab-5" class="tab-content hidden" style="overflow: hidden; clip: rect(0, auto, auto, 0);">
-            <div id="countrybackbutton" class="genre backbutton list-item" style="display: none; transform: translateX(-100%);">
+            <div id="countrybackbutton" class="genre backbutton" style="display: none; transform: translateX(-100%);">
               <span class="backarrow"><img src="sidearrow.svg" alt="arrow" width="16" height="16"></span>
-              <div id="countrybackbuttontext">---</div>
+              <div id="countrybackbuttontext">Discover</div>
           </div>
            
            <div id="countriesContainer" style="    display: flex
@@ -273,24 +275,23 @@
                 gap: 0px;
                 width: 300%;
                 transition: transform 0.3s ease-in-out;">
-            <div id="panel1" class="panel">
-            <div class="browseCountries">  <div class="border-container-countries" > <div style="    padding-bottom: 5px;
-                  font-size: 22px;">Explore countries</div><span class="arrow" style="padding-bottom: 5px;"><img src="sidearrow.svg" alt="arrow" width="16" height="16"></span></div></div>
            
            
+           <div id="panel1" class="panel" style="z-index: 5;">
+            <div class="browseCountries">  <div id = "countriesbutton" class="border-container-countries" > <div style="   padding-top: 10px; padding-bottom: 5px;
+                  font-size: 22px;">Explore countries</div><span class="arrow" style="padding-top: 5px;" ><img src="sidearrow.svg" alt="arrow" width="16" height="16"></span></div></div>
            
-           <div class="browseCountries">  <div class="border-container-countries" > <div div id = "country1header" class = "discovertitle"  style="padding-bottom: 5px;
-                 ">CountryX</div><span class="arrow" style="padding-bottom: 5px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
+           <img src="graphic1.svg" alt="My SVG icon" width="100%" height="100" class="graphic1">
+           
+           <div class="browseCountries">  <div class="border-container-countries spider" > <div div id = "country1header" class = "discovertitle" >CountryX</div><span class="arrow" style="padding-top: 1.8px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
             <ul id = "country1list" class="list">
                
             </ul>
-            <div class="browseCountries">  <div class="border-container-countries" > <div div id = "country2header" class = "discovertitle"  style="padding-bottom: 5px;
-                 ">CountryY</div><span class="arrow" style="padding-bottom: 5px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
+            <div class="browseCountries">  <div class="border-container-countries spider" > <div div id = "country2header" class = "discovertitle" >CountryY</div><span class="arrow" style="padding-top: 1.8px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
             <ul id = "country2list" class="list">
                
             </ul>
-            <div class="browseCountries">  <div class="border-container-countries" > <div div id = "country3header" class = "discovertitle"  style="padding-bottom: 5px;
-                 ">CountryZ</div><span class="arrow" style="padding-bottom: 5px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
+            <div class="browseCountries">  <div class="border-container-countries spider" > <div div id = "country3header" class = "discovertitle" >CountryZ</div><span class="arrow" style="padding-top: 1.8px;"><img src="sidearrow.svg" alt="arrow" width="18" height="18"></span></div></div>
             <ul id = "country3list" class="list">
                
             </ul>
@@ -298,10 +299,10 @@
 
             <div id="panel2" class="panel">
 
-              <ul id = "panel2list" class="list"></ul>
+              <ul id = "panel2list" class="list" style="margin-top: 40px;"></ul>
             </div>
             <div id="panel3" class="panel">
-              <ul id = "panel3list" class="list">
+              <ul id = "panel3list" class="list" style="margin-top: 40px">
 
               </ul></div>
           </div>
