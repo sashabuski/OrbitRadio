@@ -1569,7 +1569,7 @@ function updateFavoritesList() {
     favoritesList.innerHTML = ''; // Clear the existing list before updating
 
     favorites.forEach(station => {
-        if (station && station.name && station.state && station.country) {
+        if (station && station.name) {
             const listItem = document.createElement("li");
             listItem.classList.add("list-item");
 
