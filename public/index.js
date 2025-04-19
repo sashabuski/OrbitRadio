@@ -288,10 +288,25 @@ function latLonToCartesian(lat, lon, radius) {
     );
 }
 
+function showLoadingOverlay() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 500); // Match the CSS transition duration
+  }
+  
+
 // Fetch station data
 async function fetchStationsFromAPI(limit = 500000) {
+    
+    showLoadingOverlay();
     try {
-        const response = await fetch("https://orbitradio.onrender.com/stations"); // Fetch from API
+        const response = await fetch('https://orbitradio.onrender.com/stations'); // Fetch from API
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -305,6 +320,8 @@ async function fetchStationsFromAPI(limit = 500000) {
         console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
         console.error('Error fetching stations from API:', error);
+    }finally{
+        hideLoadingOverlay();
     }
 }
 
