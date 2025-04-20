@@ -9,7 +9,6 @@ let firstsong = true;
 let dragged = false;
 let isRotatingToTarget = false;
 let targetQuaternion = new THREE.Quaternion();
-let outerposition;
 let pulseVisible = false;
 let currentlistitem;
 let genreListActive = false;
@@ -17,11 +16,10 @@ let currentStationIndex;
 const audioPlayer = new Audio();
 audioPlayer.volume = 0.5;
 const stationsList = [];
-const singleStationsList = [];
 const particleIndexMap = new Map();
-const cityParticleIndexMap = new Map();  // Stores index-to-station mapping
+
 let particleGeometry;
-// Create scene, camera, and renderer
+
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -34,22 +32,19 @@ const mouse = new THREE.Vector2();
 const sphereGroup = new THREE.Group();
 scene.add(sphereGroup);
 scene.background = new THREE.Color(0xE9E9E9);
-// Load Earth texture
+
 const textureLoader = new THREE.TextureLoader();
-const earthTexture = textureLoader.load('map2.jpg');
-let isHoveringTooltip = false; 
+
 let favorites;
-const geometry = new THREE.SphereGeometry(98, 40, 40); // radius, width segments, height segments
+const geometry = new THREE.SphereGeometry(98, 40, 40); 
 const wireframe = new THREE.WireframeGeometry(geometry);
 let hoverCircleSize = 2;
-// Create a line material for the wireframe
-const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  // Set opacity (range: 0 to 1)
+
+const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  
     transparent: true });
 
 
 
-    let targetPosition;  
-// Create a mesh for the wireframe lines
 const line = new THREE.LineSegments(wireframe, material);
 sphereGroup.add(line);
 let currentStation;
@@ -57,15 +52,15 @@ let circleGeometry = new THREE.CircleGeometry(hoverCircleSize, 32);
 let circleMaterial = new THREE.MeshBasicMaterial({
 
  
-    color: 0x5967c0,  // Set color
-    transparent: false,  // Make sure it's not transparent
-    alphaTest: 0,  // Remove alphaTest or set to a lower value if needed
+    color: 0x5967c0, 
+    transparent: false,  
+    alphaTest: 0, 
 });
 let hoverCircle = new THREE.Mesh(circleGeometry, circleMaterial);
 hoverCircle.visible = false;
 scene.add(hoverCircle);
-let markerPosition;
-// Lighting
+
+
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 3, 5);
 scene.add(light);
@@ -76,59 +71,48 @@ let firstStation = 1;
 const markerGroup = new THREE.Group();
 scene.add(markerGroup);
 const uprightFix = new THREE.Euler(
- 0,   // Rotate X
-   1,  // Maybe flip Y
+ 0,   
+   1,  
     0 
 );
 
 sphereGroup.quaternion.setFromEuler(uprightFix);
 
-
-
-
-console.log('Quaternion at load:', sphereGroup.quaternion);
-const markerGeometry1 = new THREE.SphereGeometry(1, 16, 16); // radius, width segments, height segments
+const markerGeometry1 = new THREE.SphereGeometry(1, 16, 16); 
 const markerWireframe1 = new THREE.WireframeGeometry(markerGeometry1);
 
-// Create a line material for the wireframe
-const markerMaterial1 = new THREE.LineBasicMaterial({ color: 0x6d78d4, opacity: 0.2,  // Set opacity (range: 0 to 1)
+
+const markerMaterial1 = new THREE.LineBasicMaterial({ color: 0x6d78d4, opacity: 0.2, 
     transparent: true });
 
-// Create a mesh for the wireframe lines
+
 const marker1 = new THREE.LineSegments(markerWireframe1, markerMaterial1);
 scene.add(marker1);
 
 
 
-const markerGeometry2 = new THREE.SphereGeometry(1.5, 16, 16); // radius, width segments, height segments
+const markerGeometry2 = new THREE.SphereGeometry(1.5, 16, 16); 
 const markerWireframe2 = new THREE.WireframeGeometry(markerGeometry2);
 
-// Create a line material for the wireframe
-const markerMaterial2 = new THREE.LineBasicMaterial({ color: 0x7a74d1, opacity: 0.2,  // Set opacity (range: 0 to 1)
+
+const markerMaterial2 = new THREE.LineBasicMaterial({ color: 0x7a74d1, opacity: 0.2, 
     transparent: true });
 
-// Create a mesh for the wireframe lines
+
 const marker2 = new THREE.LineSegments(markerWireframe2, markerMaterial2);
 scene.add(marker2);
 
 
 
-const markerGeometry3 = new THREE.SphereGeometry(2.2, 16, 16); // radius, width segments, height segments
+const markerGeometry3 = new THREE.SphereGeometry(2.2, 16, 16); 
 const markerWireframe3 = new THREE.WireframeGeometry(markerGeometry3);
 
-// Create a line material for the wireframe
-const markerMaterial3 = new THREE.LineBasicMaterial({ color: 0x8670cd, opacity: 0.2,  // Set opacity (range: 0 to 1)
+
+const markerMaterial3 = new THREE.LineBasicMaterial({ color: 0x8670cd, opacity: 0.2, 
     transparent: true });
 
-// Create a mesh for the wireframe lines
 const marker3 = new THREE.LineSegments(markerWireframe3, markerMaterial3);
 scene.add(marker3);
-
-
-
-
-
-
 
   
 const geometry0 = new THREE.SphereGeometry(0.1, 32, 32);
@@ -140,11 +124,8 @@ const material0 = new THREE.MeshBasicMaterial({
   depthWrite: false
 });
 const sphere0 = new THREE.Mesh(geometry0, material0);
-//  sphere0.position.y = yPos;
+
 scene.add(sphere0);
-
-
-
 
 
 const geometry1 = new THREE.SphereGeometry(0.1, 32, 32);
@@ -156,7 +137,7 @@ const material1 = new THREE.MeshBasicMaterial({
   depthWrite: false
 });
 const sphere1 = new THREE.Mesh(geometry1, material1);
-//  sphere1.position.y = yPos;
+
 scene.add(sphere1);
 material0.opacity = 0;
 material1.opacity = 0;
@@ -169,37 +150,34 @@ markerGroup.add(sphere0);
 markerGroup.add(sphere1);
 let isDragging;
 
-const markerGeometry4 = new THREE.SphereGeometry(3.1, 16, 16); // radius, width segments, height segments
+const markerGeometry4 = new THREE.SphereGeometry(3.1, 16, 16); 
 const markerWireframe4 = new THREE.WireframeGeometry(markerGeometry4);
 
-// Create a line material for the wireframe
+
 const markerMaterial4 = new THREE.LineBasicMaterial({ color: 0x916cc7, opacity: 0.2,  // Set opacity (range: 0 to 1)
     transparent: true });
 
-// Create a mesh for the wireframe lines
 const marker4 = new THREE.LineSegments(markerWireframe4, markerMaterial4);
-//scene.add(marker4);
+
 
 markerMaterial1.opacity = 0;
 markerMaterial2.opacity = 0;
 markerMaterial3.opacity = 0;
 markerMaterial4.opacity = 0;
 
-const wireframeMaterialBlue = new THREE.LineBasicMaterial({ color: 0x0000ff }); // Blue wireframe
+const wireframeMaterialBlue = new THREE.LineBasicMaterial({ color: 0x0000ff }); 
 
-// Define the geometry for a cube (vertices of a cube)
+
 const cubeGeometry = new THREE.BoxGeometry(3, 3, 3);
 let preMuteValue;
-// Convert the cube's geometry into edges for the wireframe effect
+
 const cubeEdges = new THREE.EdgesGeometry(cubeGeometry);
 
-// Create a line object from the edges geometry and apply the wireframe material
+
 const wireframeCubeObject = new THREE.LineSegments(cubeEdges, wireframeMaterialBlue);
 
 wireframeCubeObject.visible  = false;
 scene.add(wireframeCubeObject);
-// Add the wireframe cube to the scene
-//sphereGroup.add(wireframeCubeObject);
 
 const particleTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/circle.png');
 
@@ -213,7 +191,6 @@ const particleMaterial = new THREE.PointsMaterial({
 });
 
 
-
 const text = document.getElementById("station-name");
 const playBtn = document.getElementById("play-btn");
 const prevBtn = document.getElementById("prev-btn");
@@ -225,12 +202,7 @@ playBtn.src = "audioplayericons/blank.svg";
 playBtn.classList.add("disabledPlay");
 particleGeometry = new THREE.BufferGeometry();
    
-//console.log('particleGeometry:', particleGeometry);
 
-
-
-
- // Create the central sphere (representing the atom's nucleus)
  const nucleusGeometry = new THREE.SphereGeometry(1, 20, 20);
  const nucleusMaterial = new THREE.MeshPhongMaterial({ color: 0x4c54ac, shininess: 50 });
  const nucleus = new THREE.Mesh(nucleusGeometry, nucleusMaterial);
@@ -241,15 +213,12 @@ particleGeometry = new THREE.BufferGeometry();
         const electronGeometry = new THREE.SphereGeometry(0.9, 10, 10);
         const redMaterial = new THREE.MeshPhongMaterial({ color: 0xbe5b8d });
 
-
-
         const electrons = [];
         for (let i = 0; i < numElectrons; i++) {
             const electron = new THREE.Mesh(electronGeometry, redMaterial);
             electrons.push(electron);
         }
 
-        // Create an atom group (nucleus + electrons)
         const atomGroup = new THREE.Group();
         atomGroup.add(nucleus);
         
@@ -261,11 +230,9 @@ particleGeometry = new THREE.BufferGeometry();
             const HISTORY_KEY = "stationHistory";
             const history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
         
-            return history[0] || null; // return null if there's no history
+            return history[0] || null;
         }
       
-
-
 
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -284,7 +251,6 @@ toggleButtonVisibility();
 
 
 
-// Convert latitude & longitude to 3D coordinates
 function latLonToCartesian(lat, lon, radius) {
     const phi = (90 - lat) * (Math.PI / 180);
     const theta = (lon + 180) * (Math.PI / 180);
@@ -305,16 +271,15 @@ function hideLoadingOverlay() {
     overlay.classList.add('fade-out');
     setTimeout(() => {
       overlay.style.display = 'none';
-    }, 500); // Match the CSS transition duration
+    }, 500); 
   }
   
 
-// Fetch station data
 async function fetchStationsFromAPI(limit = 500000) {
     
     showLoadingOverlay();
     try {
-        const response = await fetch('http://orbitradio.onrender.com/stations'); // Fetch from API
+        const response = await fetch('http://orbitradio.onrender.com/stations'); 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -323,7 +288,7 @@ async function fetchStationsFromAPI(limit = 500000) {
         const filteredStations = stationsMaster.filter(stationsMaster => stationsMaster.state);
 
         stationsList.push(...filteredStations.slice(0, limit));
-        addStationsAsParticles(); // Call function after fetching data
+        addStationsAsParticles(); 
        await dataLoaded();
         console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
@@ -339,10 +304,9 @@ async function dataLoaded(){
 
 
 let particles;
-let cityParticles; // Reference to the particle system
+let cityParticles; 
 
-// Add stations as particleslet particles;
-let cityParticleSystems = []; // Array to hold multiple particle systems
+let cityParticleSystems = []; 
 
 // Add stations as particles
 function addStationsAsParticles() {
@@ -359,7 +323,7 @@ function addStationsAsParticles() {
         positions[i * 3 + 1] = position.y;
         positions[i * 3 + 2] = position.z;
       
-        particleIndexMap.set(i, stationsList[i]); // Store index-to-station mapping
+        particleIndexMap.set(i, stationsList[i]); 
     }
 
     const textureLoader = new THREE.TextureLoader();
@@ -417,10 +381,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Function to show the content of the selected tab
+    
    
-
-    // Dragging functionality
     const box = document.getElementById('draggable-box');
     const dragHandle = document.getElementById('drag-handle');
     let isBoxDragging = false, offsetX, offsetY;
@@ -443,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener('mouseup', () => isBoxDragging = false);
     }
 
-    // Resizing functionality
+
     const resizer = document.getElementById('resizer');
     let isResizing = false, startWidth, startHeight, startX, startY;
 
@@ -451,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resizer.addEventListener('mousedown', (e) => {
             isResizing = true;
 
-    // Force positioning to keep top-left fixed during resize
+
     const rect = box.getBoundingClientRect();
     box.style.left = `${rect.left}px`;
     box.style.top = `${rect.top}px`;
@@ -467,21 +429,18 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
 
-            // Calculate new dimensions
+           
             let newWidth = startWidth + e.clientX - startX;
             let newHeight = startHeight + e.clientY - startY;
           
-            // Set min/max limits
-            const minWidth = 247;  // Set your desired min width
-            const maxWidth = 600;  // Set your desired max width
-            const minHeight = 250; // Set your desired min height
-            const maxHeight = 700; // Set your desired max height
+            const minWidth = 247;  
+            const maxWidth = 600;  
+            const minHeight = 250; 
+            const maxHeight = 700; 
           
-            // Apply limits
             newWidth = Math.min(Math.max(newWidth, minWidth), maxWidth);
             newHeight = Math.min(Math.max(newHeight, minHeight), maxHeight);
-          
-            // Apply new sizes
+           
             box.style.width = `${newWidth}px`;
             box.style.height = `${newHeight}px`;
         });
@@ -489,31 +448,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener('mouseup', () => isResizing = false);
     }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Assume these are the global variables that hold the current stream and station info
-
-
- // Create an audio player instance
-
-
-
-
-
-// Elements
-
 
 
 
@@ -525,7 +459,6 @@ function updatePlayer(station) {
     sphere1.visible = false;
     sphere0.visible = false;
 
-// 🔁 New way: Use station geo_lat and geo_long to position markers
 const direction = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
 const baseDistance = 102.05;
 
@@ -545,7 +478,6 @@ markerMaterial1.opacity = 0;
 markerMaterial2.opacity = 0;
 markerMaterial3.opacity = 0;
 
-
 sphereGroup.add(wireframeCubeObject);
 sphereGroup.add(atomGroup);
 sphereGroup.add(marker1);
@@ -557,41 +489,28 @@ sphereGroup.add(sphere1);
 fadeInMarkers();
 startmarkerFlashing();
 
-
-
-
-
-
-
     updateStationHistory(station);
     getMostRecentStations();
-    // Build text content
+ 
     let textContent = station.state
         ? `${station.name} - ${station.state}, ${station.country}`
         : `${station.name} - ${station.country}`;
     
     updatePlayerText(textContent);
 
-    // Show loading animation
     document.getElementById("loadinganimation").style.display = "block";
 
-    // Update the audio player
     audioPlayer.src = station.url;
     audioPlayer.load();
   if(!firstsong){
     audioPlayer.play(); 
 }
 
- 
 
-    // Wait until the audio is ready to play
     audioPlayer.oncanplay = () => {
         sphere1.visible = true;
         sphere0.visible = true;
         
-
-
-
         const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
         const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
         targetDirection.applyQuaternion(currentRotation);
@@ -609,15 +528,12 @@ startmarkerFlashing();
         pulseVisible = true;
 
         if(pulseVisible){
-            // Initial animations
-            expandAndFade(sphere1);
+             expandAndFade(sphere1);
             gsap.delayedCall(1.5, () => {
             expandAndFade(sphere1);
             });
             }
         if(pulseVisible){
-        
-            //console.log("AREWEHEREORNOT");
       
         }
 
@@ -631,7 +547,7 @@ startmarkerFlashing();
         
 
         stopmarkerFlashing();
-       // toggleMarker4Flashing();
+       
        if(firstsong){
         playBtn.src = "audioplayericons/play.svg";
         }
@@ -641,12 +557,11 @@ startmarkerFlashing();
 
     };
 
-    // Optional: handle error case
+   
     audioPlayer.onerror = () => {
         document.getElementById("loadinganimation").style.display = "none";
         const box = document.querySelector('.loadFailedBox');
     
-        // Use a small delay to ensure styles are applied before transition
         setTimeout(() => {
             box.classList.remove('hide');  
           box.classList.add('show');
@@ -656,19 +571,6 @@ startmarkerFlashing();
     };
 }
 
-
-// Play/Pause toggle  
-/*function togglePlay() {
-   
-    console.log("dhasgdkjashd"+currentStation);
-    if (audioPlayer.paused) {
-        audioPlayer.play();
-        playBtn.src = "audioplayericons/pause.svg"; // Assuming you have a pause icon
-    } else {
-        audioPlayer.pause();
-        playBtn.src = "audioplayericons/play.svg";
-    }
-}*/
 const loadingIcon = document.getElementById('loadinganimation');
 
 function togglePlay() {
@@ -692,13 +594,12 @@ function togglePlay() {
         };
     } else {
         audioPlayer.pause();
-       // toggleMarker4Flashing();
+    
         playBtn.src = "audioplayericons/play.svg";
     }
 }
 
 
-// Next Station
 function nextStation() {
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
@@ -713,7 +614,7 @@ function nextStation() {
 
 }
 
-// Previous Station
+
 function prevStation() {
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
@@ -730,63 +631,55 @@ function prevStation() {
 
 }
 
-// Volume Control (Example of mute/unmute or volume adjustment)
+
 function toggleVolume() {
     if (audioPlayer.muted) {
-       // console.log("audioPlayer.sound: "+audioPlayer.muted);
+      
         audioPlayer.muted = false;
-       // console.log("1");
+      
       
         volumeSlider.value = preMuteValue;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.remove('muted'); 
-        // Normal volume icon
+   
     } else {
 
-       // console.log("audioPlayer.sound: "+audioPlayer.muted);
+    
         audioPlayer.muted = true;
         
         preMuteValue = volumeSlider.value;
-      // console.log("2"); 
+   
        volumeSlider.value = 0;
         volumeSlider.style.background = `linear-gradient(to right, rgba(164,177,255, 1) ${volumeSlider.value}%, #ccc ${volumeSlider.value}%)`;
         volumeBtn.classList.add('muted');
     }
 }
 
-// Initialize the first station
 
-
-// Add event listeners to buttons
 playBtn.addEventListener("click", togglePlay);
 nextBtn.addEventListener("click", nextStation);
 prevBtn.addEventListener("click", prevStation);
 volumeBtn.addEventListener("click", toggleVolume);
 
 
-
-
-//HISTORY
 function updateStationHistory(newStation) {
     if (!newStation || !newStation.name) return;
 
     const HISTORY_KEY = "stationHistory";
 
-    // Get existing history or initialize
     let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
 
-    // Remove if station already exists (prevent duplicates)
+   
     history = history.filter(station => station.name !== newStation.name);
 
-    // Add new station to the start of the list (most recent first)
+   
     history.unshift(newStation);
 
-    // Limit history to 10 entries
+  
     if (history.length > 10) {
         history = history.slice(0, 10);
     }
 
-    // Save back to localStorage
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
 }
 
@@ -812,14 +705,11 @@ function getMostRecentStations(count = 5) {
             currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            //revealHeart(listItem);
             listItem.style.backgroundColor = "#6D78D4";
             listItem.style.color = "#d896ed";
             currentlistitem = listItem;
             const removeButton = listItem.querySelector('.remove-btn');
-           
-           
-           
+
             updateFavoritesList(); 
             highlightListItem();
             wrangleHeart();
@@ -854,23 +744,13 @@ function getMostRecentStations(count = 5) {
 
         tab3List.appendChild(listItem);
     });
-    // Most recent stations are at the start
+   
 }
 
 getMostRecentStations();
 
 
 
-
-
-
-
-
-
-
-
-
-// Raycasting for click detection
 function onClick(event) {
     
     if (dragged) return;
@@ -879,7 +759,7 @@ function onClick(event) {
     material0.opacity = 0;
     material1.opacity = 0;
 
-    //console.log("onClick");
+
 
     const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
     if (!(hoveredElement instanceof HTMLCanvasElement)) {
@@ -888,9 +768,7 @@ function onClick(event) {
 
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    let closestPoint = null;
-    let closestDistance = Infinity;
-
+ 
     raycaster.setFromCamera(mouse, camera);
 
     const allParticles = [particles, ...cityParticleSystems];
@@ -924,31 +802,19 @@ function onClick(event) {
                         toggleButtonVisibility();
                         updateFavoritesList();
                         wrangleHeart();
-
-                        
+  
                     }
                 }
             }
         }
     }
-
-   
 }
-
-
-
-       
 
       camera.position.z = 15;
 
 window.addEventListener('click', onClick, false);
 
 
-
-
-
-
-// Camera & Interaction Setup
 camera.position.z = 230;
 let targetZ = camera.position.z;
 let zoomSpeed = 0.01 * camera.position.z / 40;
@@ -970,28 +836,19 @@ function onMouseDown(event) {
     isDragging = true;
 
     dragged = false;
-   // console.log("mousedown:" + isDragging);
+ 
     const canvas = renderer.domElement;
     
-    // Check if the clicked element is NOT the box or the drag handle
     if (event.target === canvas) {
         isDragging = true;
         previousMousePosition = { x: event.clientX, y: event.clientY };
     }
     
-    // Check if the clicked element is the floating-box div
     const floatingBox = document.querySelector('.floating-box');
-  
-    // console.log("floating-box "+JSON.stringify(floatingBox));
-   // console.log("Event target:", event.target);  // Logs the entire DOM element
-//console.log("Event target class:", event.target.className);  // Logs the class of the element
-//console.log("Event target id:", event.target.id);  // Logs the id if available
-//console.log("Event target tagName:", event.target.tagName);
-
     
     if (event.target.tagName != "CANVAS") {
         boxclick = true;
-       // console.log("floating-box "+floatingBox);
+      
     } else {
         boxclick = false;
     }
@@ -1011,21 +868,20 @@ function onMouseMove(event) {
         const deltaX = event.clientX - previousMousePosition.x;
         const deltaY = event.clientY - previousMousePosition.y;
 
-        const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized from 0 to 1
+        const distanceScale = (camera.position.z - 130) / (230 - 130); 
         const rotationSpeed = 0.002 * (0.3 + 0.7 * distanceScale);
 
         if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
-            dragged = true; // Mark as dragged if moved enough
+            dragged = true; 
         }
 
-        // Quaternion rotation instead of Euler angles
+        
         const quaternionY = new THREE.Quaternion();
         quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * rotationSpeed);
 
         const quaternionX = new THREE.Quaternion();
         quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * rotationSpeed);
 
-        // Combine the rotations (Y first, then X)
         const combinedRotation = new THREE.Quaternion().copy(quaternionY).multiply(quaternionX);
         sphereGroup.quaternion.premultiply(combinedRotation);
 
@@ -1037,14 +893,9 @@ function onMouseMoveRaycast(event) {
     
     const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
     if (!(hoveredElement instanceof HTMLCanvasElement)) {
-      //  console.log('Not hovering over the canvas!');
-        // Do something when NOT hovering over canvas
+   
       } else {
-       // console.log('Hovering over the canvas!');
-        // Do something when hovering
-    
-   
-   
+
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     const button = document.getElementById("tooltip-btn");
@@ -1054,9 +905,8 @@ function onMouseMoveRaycast(event) {
     let closestDistance = Infinity;
     let closestPoint = null;
    
-    
-    // Check all particle systems (particles and cityParticleSystems)
-    const allParticles = [particles, ...cityParticleSystems]; // does this  Combine single and city particle systems
+   
+    const allParticles = [particles, ...cityParticleSystems]; 
     if(!isDragging){
     for (let system of allParticles) {
 
@@ -1065,13 +915,13 @@ function onMouseMoveRaycast(event) {
             
 
        if (intersects.length > 0) {
-            const index = intersects[0].index; // Get the index of the clicked particle
+            const index = intersects[0].index; 
             const station = particleIndexMap.get(index);
             if (station) {
                 nameText.style.animation = 'none';
 
-// Force reflow/repaint (this ensures the change is applied)
-nameText.offsetHeight;  // Trigger a reflow (read a property)
+
+nameText.offsetHeight;
 
 nameText.style.animationDelay = '2s';
 nameText.style.animation = 'scrollText 15s linear infinite';
@@ -1081,18 +931,14 @@ nameText.style.animation = 'scrollText 15s linear infinite';
                     nameText.textContent = station.name+" - "+station.state+", "+station.country;
                 }else{
                     nameText.textContent = station.name+" - "+station.country;
-                
+            
                 }
 
-                
-                   // console.log('asdasdasda:');
             } 
         }
         } else {
-            //console.log('Skipping invalid system:', system);
+           
         }
-
-
 
         let positions;
        
@@ -1101,7 +947,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
             positions = system.geometry.attributes.position.array;
         } 
     }else {
-           // console.log('No positions found for particle system');
+           
             continue;
         }
 
@@ -1136,18 +982,18 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
-    let offsetX = -326;  // Default horizontal offset
-    let offsetY = -55; // Default vertical offset
+    let offsetX = -326;  
+    let offsetY = -55; 
 
-    // Check which half of the screen the cursor is on
+   
     if (event.clientX > screenWidth / 2) {
-        // Right half of the screen
-        offsetX = 10; // Adjust horizontal offset for the right side
-        offsetY = -55; // Optionally adjust vertical offset for the right side
+      
+        offsetX = 10; 
+        offsetY = -55; 
     } else {
-        // Left half of the screen
-        offsetX = -306; // Default or change it to your preference for the left side
-        offsetY = -55; // Optionally adjust for the left side
+      
+        offsetX = -306; 
+        offsetY = -55; 
     }
   
         tooltip.style.left = `${event.pageX + offsetX}px`;
@@ -1161,7 +1007,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         document.body.style.cursor = 'default';
         if(event.target.tagName != "INPUT")
         {
-        //document.body.style.cursor = 'default';
+       
         } 
         hoverCircle.visible = false;
         tooltip.style.visibility = "hidden";
@@ -1170,7 +1016,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
 
 
     tooltip.addEventListener("mouseenter", () => {
-       // console.log("jhiji");
+     
         isHoveringTooltip = true;
       });
   
@@ -1187,22 +1033,20 @@ nameText.style.animation = 'scrollText 15s linear infinite';
   
 
 function onMouseUp() {
-   // console.log("isDragging: "+isDragging);
+   
     isDragging = false;
-   // console.log("isDragging: "+isDragging);
+   
     
 }
 
 
 window.addEventListener('resize', () => {
-    // Update camera aspect ratio
+    
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    // Update renderer size
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Optionally adjust pixel ratio again
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
 
@@ -1212,18 +1056,16 @@ window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener('mousemove', onMouseMoveRaycast, false);
 window.addEventListener('mouseup', onMouseUp, false);
 
-// Animation Loop
+
 
 
 function updateDynamicScale() {
     const scaleFactor = camera.position.z / maxCameraZ;
 
-    // Animate with GSAP to new scale
     gsap.to(marker1.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
     gsap.to(marker2.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
     gsap.to(marker3.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
-   // gsap.to(sphere0.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
-   // gsap.to(sphere1.scale, { x: scaleFactor, y: scaleFactor, z: scaleFactor, duration: 0.3 });
+
 }
 
 
@@ -1231,21 +1073,19 @@ function animate() {
     requestAnimationFrame(animate);
     camera.position.z += (targetZ - camera.position.z) * 0.1;
    
-    const minScale = 0.1;  // How small it gets at closest zoom
-const maxScale = 1.0;  // Full size at max zoom (230)
-const zoomRange = maxCameraZ - 105; // your min zoom is 105
+    const minScale = 0.1;  
+const maxScale = 1.0;  
+const zoomRange = maxCameraZ - 105; 
 
-const normalizedZoom = (camera.position.z - 105) / zoomRange; // 0 (close) to 1 (far)
+const normalizedZoom = (camera.position.z - 105) / zoomRange; 
 const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
-console.log(sphereGroup.quaternion);
-//console.log("previuos:" + previousscrollposition);
-//console.log(contentDiv.scrollTop);
-   // console.log(sphere0.visible);
+
+
    if (!hoverCircle.visible && !isRotatingToTarget) {
-    const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized 0 to 1
-    const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);   // Slower when zoomed in
+    const distanceScale = (camera.position.z - 130) / (230 - 130); 
+    const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);  
 
     const quaternionY = new THREE.Quaternion();
     quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), autoRotateSpeed);
@@ -1255,7 +1095,7 @@ console.log(sphereGroup.quaternion);
 
 
 if (isRotatingToTarget) {
-    sphereGroup.quaternion.slerp(targetQuaternion, 0.08); // Smooth interpolation
+    sphereGroup.quaternion.slerp(targetQuaternion, 0.08);
     const angleToTarget = sphereGroup.quaternion.angleTo(targetQuaternion);
     if (angleToTarget < 0.001) {
         sphereGroup.quaternion.copy(targetQuaternion);
@@ -1266,14 +1106,13 @@ if (isRotatingToTarget) {
    const minSize = 0.2;
    const maxSize = 0.8;
 
-   // Get the camera's Z position (assuming movement along the Z-axis)
   
    const angleIncrement = (2 * Math.PI) / numElectrons;
 
    electrons.forEach((electron, i) => {
        let electronX, electronY, electronZ;
 
-       // Modifying electron orbits
+      
        if (i % 3 === 0) {
            electronX = orbitRadius * Math.cos(electronAngle + i * angleIncrement);
            electronY = orbitRadius * Math.sin(electronAngle + i * angleIncrement);
@@ -1295,28 +1134,17 @@ if (isRotatingToTarget) {
 
     electronAngle += 0.1;
 
-    // Move the entire atom group (nucleus + electrons) along the X-axis
-  
 
-   // Normalize the camera position to a 0-1 range
    let t = (camera.position.z - 110) / (230 - 130);
 
-   // Interpolate size between minSize and maxSize
+
    particleMaterial.size = minSize + t * (maxSize - minSize);
 
 
    const minSizeHover = 0.2;
    const maxSizeHover = 2;
 
-   // Get the camera's Z position (assuming movement along the Z-axis)
-  
 
-  
-   
-   // Normalize the camera position to a 0-1 range
-
-
-   // Interpolate size between minSize and maxSize
    let newCircleSize = minSizeHover + t * (maxSizeHover - minSizeHover);
    hoverCircle.geometry.dispose();
    hoverCircle.geometry = new THREE.CircleGeometry(newCircleSize, 32);
@@ -1337,21 +1165,19 @@ function startScrolling2() {
     const textWidth = textElement.offsetWidth; 
     const containerWidth = container.offsetWidth;
 
-    // Clear any existing timeout to prevent looping when it shouldn't
     clearTimeout(loopTimeout);
 
     if (textWidth <= containerWidth) {
-        // If text fits, center it, remove animation & padding
+ 
         container.style.justifyContent = "center";
         textElement.style.animation = "none";
         textElement.style.transform = "translateX(0%)";
-        textElement.style.paddingLeft = "0px"; // Remove padding
+        textElement.style.paddingLeft = "0px"; 
         return;
     }
 
-    // If text is too long, remove centering, enable scrolling & add padding
     container.style.justifyContent = "flex-start";
-    textElement.style.paddingLeft = "5px"; // Add padding
+    textElement.style.paddingLeft = "5px"; 
 
     const distance = textWidth + containerWidth; 
     const speed = 50; // Pixels per second
@@ -1392,7 +1218,6 @@ function startScrolling1() {
     const textWidth = textElement.offsetWidth; 
     const containerWidth = container.offsetWidth;
 
-    // Clear any existing timeout to prevent looping when it shouldn't
     clearTimeout(loopTimeout);
 
     if (textWidth <= containerWidth) {
@@ -1404,7 +1229,7 @@ function startScrolling1() {
         return;
     }
 
-    // If text is too long, remove centering, enable scrolling & add padding
+  
     container.style.justifyContent = "flex-start";
     textElement.style.paddingLeft = "20px"; // Add padding
 
@@ -1414,23 +1239,23 @@ function startScrolling1() {
 
     // Clear any existing animation
     textElement.style.animation = "none";
-    textElement.offsetHeight; // Force reflow (triggers reapplication of animation)
+    textElement.offsetHeight; 
     
     // First animation (with 2s delay)
     textElement.style.animation = `firstScroll ${duration}s linear forwards`;
     textElement.style.animationDelay = "2s";
 
     loopTimeout = setTimeout(() => {
-        // Start the loop animation only after the first scroll completes
+       
         textElement.style.animation = `loopScroll ${duration}s linear infinite`;
-    }, (duration + 2) * 1000); // First animation time + 2s delay
+    }, (duration + 2) * 1000); 
 }
 
 function updatePlayerText(newText) {
     const textElement = document.getElementById("station-name");
-    textElement.innerText = newText; // Update the text
+    textElement.innerText = newText; 
 
-    // Restart the animation after text update
+   
     startScrolling1();
 }
 
@@ -1459,7 +1284,7 @@ window.onresize = startScrolling1;
         const locationResponse = await fetch('https://ipinfo.io?token=103b79e365df36');
         const locationData = await locationResponse.json();
         const countrycode = locationData.country;
-     //   document.getElementById('country').textContent = countrycode;
+    
 
         localSearchResults = stationsMaster
             .filter(station =>
@@ -1480,7 +1305,7 @@ window.onresize = startScrolling1;
 
     } catch (error) {
         console.error("Error fetching genre stations:", error);
-       // document.getElementById('country').textContent = 'Could not determine your country.';
+       
     } finally {
         localloadingspinner.style.display = "none";
     }
@@ -1521,7 +1346,7 @@ function loadLocalStations(localSearchResults) {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
-           // revealHeart(listItem);
+     
         });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
@@ -1569,14 +1394,11 @@ getLocalStations();
 
 
 function revealHeart(listItem){
-   // console.log("Jeessica");
+ 
     const removeButton = listItem.querySelector('.remove-btn');
     
-    //removeButton.display.height = 50;
     removeButton.classList.add("revealHeart");
-   
-   // console.log(removeButton);
-   // console.log(removeButton.classList);
+
 }
 /*FAVOURITES 
 *
@@ -1586,10 +1408,10 @@ function revealHeart(listItem){
 *
 */
 function updateFavoritesList() {
-    favorites = getFavoriteStations(); // Retrieve favorite stations from localStorage or cookies
+    favorites = getFavoriteStations(); 
     const favoritesList = document.querySelector("#tab-1 .list");
-console.log(favorites);
-    favoritesList.innerHTML = ''; // Clear the existing list before updating
+
+    favoritesList.innerHTML = ''; 
 
     favorites.forEach(station => {
         if (station && station.name) {
@@ -1614,7 +1436,7 @@ console.log(favorites);
                 
             });
 
-            // Wrapper for styling
+         
             const contentWrapper = document.createElement("div");
             contentWrapper.classList.add("border-container");
 
@@ -1631,11 +1453,10 @@ console.log(favorites);
 
             textWrapper.appendChild(locationText);
 
-            // Remove ("X") button with heart SVG
             const removeButton = document.createElement("button");
             removeButton.classList.add("remove-btn");
             removeButton.addEventListener("click", (event) => {
-                event.stopPropagation(); // Don't trigger list-item click
+                event.stopPropagation(); 
                 removeFavorite(station);
             });
 
@@ -1651,7 +1472,7 @@ console.log(favorites);
             2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 \
             16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 \
             11.54L12 21.35z");
-           // heartPath.setAttribute("fill", "rgba(109, 120, 212, 0.95)"); // ✅ Fixed missing )
+          
 
             heartSvg.appendChild(heartPath);
             removeButton.appendChild(heartSvg);
@@ -1661,9 +1482,9 @@ console.log(favorites);
             listItem.appendChild(contentWrapper);
             favoritesList.appendChild(listItem);
 
-            // ✅ Apply current station styles *after* insertion
+            
             if (currentStation && station.name === currentStation.name) {
-                // Force reflow to allow transition to work
+            
                 void removeButton.offsetWidth;
 
                 removeButton.style.opacity = 1;
@@ -1677,63 +1498,48 @@ console.log(favorites);
 }
 
 
-
-// Function to remove a favorite station
 function removeFavorite(stationToRemove) {
     if (!stationToRemove || !stationToRemove.name) {
-        console.error("Invalid station data:", stationToRemove); // Debug log if station data is invalid
-        return; // Exit early if the station data is invalid
+        console.error("Invalid station data:", stationToRemove); 
+        return; 
     }
 
-    let favorites = getFavoriteStations(); // Get current favorites
-    
-    //console.log("Current favorites:", favorites);
-    favorites = favorites.filter(station => station.name !== stationToRemove.name); // Remove the station
-   // console.log("future Current favorites:", favorites);
-    saveFavoriteStations(favorites);  // Save updated favorites back to storage (cookie/localStorage)
+    let favorites = getFavoriteStations(); 
+      
+    favorites = favorites.filter(station => station.name !== stationToRemove.name); 
+ 
+    saveFavoriteStations(favorites);  
     updateFavoritesList(); 
-    wrangleHeart(); // Re-render the updated list
+    wrangleHeart(); 
 }
 
-// Save updated favorites to localStorage (or use cookies)
 function saveFavoriteStations(favorites) {
-    localStorage.setItem("favorites", JSON.stringify(favorites));  // Save to localStorage
+    localStorage.setItem("favorites", JSON.stringify(favorites)); 
 }
 
-// Retrieve favorite stations from localStorage (or cookies)
 function getFavoriteStations() {
     let favoriteStations = localStorage.getItem("favorites");
     return favoriteStations ? JSON.parse(favoriteStations) : [];
 }
 
-// Function to save favorite stations to localStorage
-
-// Function to handle heart button click
 function handleHeartClick(event) {
     updateFavoritesList();
 
 
-    let isFavorite; // Flag to track if currentStation is in favorites
+    let isFavorite; 
 
     for (let i = 0; i < favorites.length; i++) {
-       // console.log("da324234s");
+
       
         if (favorites[i].name === currentStation.name) {
            
-           // console.log(i+"fav: " + JSON.stringify(favorites[i]));
-          //  console.log(i+"current: " + JSON.stringify(currentStation));
-           
             isFavorite = true;
-            break; // Exit loop early once we find a match
+            break; 
         }
     }
     
-    
-  
-
     favorites = getFavoriteStations();
 
- 
     if (!isFavorite) {
         
         favorites.push(currentStation); 
@@ -1748,7 +1554,6 @@ function handleHeartClick(event) {
        
         updateHeartButton(heartButton, false); 
         
-
     }
 }
 
@@ -1762,10 +1567,9 @@ function highlightListItem() {
     const allListItems = [...searchList, ...recentList, ...localList, ...genreList];
 
     allListItems.forEach(listItem => {
-        // Get the inner div (the one that has the station name text + h2)
+   
         const containerDiv = listItem.querySelector(".border-container > div");
 
-        // Clone the node to remove the h2 from the copy
         const cloned = containerDiv.cloneNode(true);
         const h2 = cloned.querySelector("h2");
         if (h2) cloned.removeChild(h2);
@@ -1790,22 +1594,15 @@ function highlightListItem() {
 function wrangleHeart() {
     let button = document.getElementById("favorite-btn");
 
-    // Log the objects using JSON.stringify() to see their content
-    //console.log("fav: " + JSON.stringify(favorites));
-    //console.log("current: " + JSON.stringify(currentStation));
-
-    let isFavorite; // Flag to track if currentStation is in favorites
+    let isFavorite; 
 
 for (let i = 0; i < favorites.length; i++) {
-   // console.log("da324234s");
   
     if (favorites[i].name === currentStation.name) {
        
-       // console.log(i+"fav: " + JSON.stringify(favorites[i]));
-      //  console.log(i+"current: " + JSON.stringify(currentStation));
-      // //
+
         isFavorite = true;
-        break; // Exit loop early once we find a match
+        break; 
     }
 }
 
@@ -1814,15 +1611,14 @@ for (let i = 0; i < favorites.length; i++) {
             button.classList.toggle('filled');
             
         }
-//
-       // console.log("das");
+
     } else {
         if (button.classList.contains('filled')) {
             button.classList.toggle('filled');
             
-           // console.log("here");
+           
         }
-       // console.log("dasasda");
+    
     }
 }
 
@@ -1836,35 +1632,29 @@ function updateHeartButton(button, isFavorite) {
            
             button.classList.toggle('filled');
             button.classList.add('filled');
-           
-           // console.log("here1");
+
         }
         
     } else {
         button.classList.remove('favorite');
         if (button.classList.contains('filled')) {
             button.classList.toggle('filled');
-            //console.log("here2");
+          
         }
     }
 }
 
-// Add event listeners to all heart buttons
+
 document.querySelectorAll(".heart-btn").forEach(button => {
     button.addEventListener("click", handleHeartClick);
-   // button.addEventListener("click", fillHeart);
+
 });
 
 
 
-//function fillHeart(event) {
-  //  event.currentTarget.classList.toggle('filled');
-//}
-
-// Display favorites when the page loads
 window.onload = function() {
     updateFavoritesList();  // Update the list
-    // Update heart buttons for existing favorites
+  
     document.querySelectorAll(".heart-btn").forEach(button => {
         const station = button.getAttribute("data-station");
         let favorites = getFavoriteStations();
@@ -1873,14 +1663,11 @@ window.onload = function() {
         }
     });
 }
-//console.log("ahahhahaHAAHAH current station "+currentStation);
-// or someVar = 'test'; to check when it's not undefined
 
-// Function to toggle visibility based on the variable's state
 function toggleButtonVisibility() {
     const button = document.getElementById("favorite-btn");
 
-    // Check if the variable is undefined
+
     if (typeof currentStation === 'undefined') {
         button.disabled = true;
         button.classList.add('disabled'); // Fades out
@@ -1890,25 +1677,21 @@ function toggleButtonVisibility() {
     }
 }
 
-// Call the function to update button visibility
-
-
 
 
 volumeSlider.addEventListener("input", () => {
     audioPlayer.volume = volumeSlider.value / 100;
     if (volumeSlider.value == 0){
-       // console.log("3");
+      
        
         volumeBtn.classList.add('muted');
     }else{
         audioPlayer.muted = false;
         preMuteValue =  audioPlayer.volume;
-        //console.log("4");
         volumeBtn.classList.remove('muted');
     }
 });
-//clearAllCookies();
+
 
 function fadeInMarkers() {
     const markers = [markerMaterial1, markerMaterial2, markerMaterial3, markerMaterial4];
@@ -1930,7 +1713,7 @@ function fadeInMarkers() {
             }
             animateFadeIn();
         }, delay);
-        delay += 70; // Increase delay for each marker (500ms delay between markers)
+        delay += 70; 
     });
 }
 
@@ -1967,24 +1750,20 @@ function flash(index = 0) {
 
         function startmarkerFlashing() {
             markerFlashing = true;
-            flash(); // begin the loop
+            flash(); 
         }
 
         function stopmarkerFlashing() {
             markerFlashing = false;
             clearTimeout(flashTimeout);
-            // Reset all opacities to 1 instantly
+  
             materials.forEach(mat => {
-                gsap.killTweensOf(mat); // stop any active tweens
+                gsap.killTweensOf(mat); 
                 mat.opacity = 0.6;
             });
         }
 
 
-
-
-       
-        // Marker 4 flash toggle logic
         let marker4Flashing = false;
         let marker4Timeout = null;
 
@@ -2022,11 +1801,11 @@ function flash(index = 0) {
                 yoyo: true,
                 repeat: 1,
                 onUpdate: () => {
-                    markerMaterial4.color.set(color); // Apply updated color
+                    markerMaterial4.color.set(color); 
                 },
                 onComplete: () => {
                     if (marker4Flashing) {
-                        marker4Timeout = setTimeout(flashMarker4Loop, 400); // Restart flash cycle
+                        marker4Timeout = setTimeout(flashMarker4Loop, 400); 
                     }
                 }
             });
@@ -2055,56 +1834,6 @@ function flash(index = 0) {
  * 
  */
 
-/** 
-async function countTags() {
-    try {
-        // Fetch the list of stations from the server
-        const response = await fetch("http://localhost:3000/stations");
-        const stations = await response.json();
-
-        // Filter stations that have a URL
-        const stationsWithUrl = stations.filter(station => station.url);
-
-        // Create an object to store tag counts and an array to preserve order of appearance
-        const tagCounts = {};
-
-        // Loop through each station with a URL and process its tags
-        stationsWithUrl.forEach(station => {
-            const tags = station.tags ? station.tags.split(",") : []; // Split tags by commas
-
-            tags.forEach(tag => {
-                // Clean up spaces and count the tags
-                tag = tag.trim();
-                if (tag) {
-                    if (!tagCounts[tag]) {
-                        tagCounts[tag] = 1;
-                    } else {
-                        tagCounts[tag]++;
-                    }
-                }
-            });
-        });
-
-        // Convert the tagCounts object to an array of [tag, count] pairs
-        const tagArray = Object.entries(tagCounts);
-
-        // Sort the tags by count (most frequent first)
-        tagArray.sort((a, b) => b[1] - a[1]);
-
-        // Display the results in the console
-        console.log(`${stationsWithUrl.length} stations searched`);
-        tagArray.forEach(([tag, count]) => {
-            console.log(`${tag}: ${count}`);
-        });
-    } catch (error) {
-        console.error("Error fetching stations:", error);
-    }
-}
-
-// Call the function when the page loads
-countTags();
-
-*/
 function debounce(func, delay) {
     let timeout;
     return (...args) => {
@@ -2113,7 +1842,6 @@ function debounce(func, delay) {
     };
   }
   
-
 
 let searchResults = [];
 let renderedCount = 0;
@@ -2134,7 +1862,7 @@ async function filterList() {
     nothingFound.style.display = "none";
 
     if (!query) {
-        // Search is empty
+        
         searchResults = [];
         renderedCount = 0;
         updateSearchResults([]);
@@ -2144,10 +1872,8 @@ async function filterList() {
 
     loadingSpinner.style.display = "block";
 
-    // Split query into individual words for AND-matching
     const words = query.split(/\s+/);
 
-    // Filter using stationsMaster
     let filtered = stationsMaster.filter(station => {
         if (!station.url) return false;
 
@@ -2155,7 +1881,7 @@ async function filterList() {
         return words.every(word => haystack.includes(word));
     });
 
-    // Remove duplicates by name
+
     searchResults = filtered.filter((station, index, self) =>
         index === self.findIndex(s => s.name === station.name)
     );
@@ -2176,10 +1902,6 @@ async function filterList() {
 }
 
 
-
-
-
-
 function loadMoreResults() {
     const nextBatch = searchResults.slice(renderedCount, renderedCount + RESULTS_PER_BATCH);
     updateSearchResults(nextBatch, true);
@@ -2190,7 +1912,7 @@ function updateSearchResults(results, append = false) {
     console.log("updating search results");
     const searchList = document.querySelector("#tab-2 .list");
 
-    if (!append) searchList.innerHTML = ''; // Only clear if not appending
+    if (!append) searchList.innerHTML = ''; 
 
     results.forEach(station => {
         const listItem = document.createElement("li");
@@ -2212,7 +1934,6 @@ function updateSearchResults(results, append = false) {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
-            //revealHeart(listItem);
            
         });
 
@@ -2239,7 +1960,7 @@ function updateSearchResults(results, append = false) {
         if(currentStation){
          
             if(currentStation.changeuuid == station.changeuuid){
-              // console.log("HERE1");
+              
                 listItem.style.backgroundColor = "#6D78D4";
                 listItem.style.color = "#d896ed";
             }
@@ -2269,15 +1990,14 @@ function genreBack() {
     backbutton.style.opacity = "0";
     backbutton.style.pointerEvents = "none";
       
-      // Optionally remove it completely after fade
+
       setTimeout(() => {
         backbutton.style.display = "none";
       }, 300);
     container.style.transform = 'translateX(0%)';
     
-    // Clear list if needed (e.g., clearing the list inside the container)
     const stationList = document.getElementById('genreStationList');
-    stationList.innerHTML = '';  // Clears the list content
+    stationList.innerHTML = '';  
     firstStation = 1;
     genreListActive = false;
     content.scrollTop = 0;
@@ -2310,7 +2030,7 @@ const tags = [
 
 const tagsListContainer = document.getElementById('genreList');
 
-// Function to toggle menu and sublist display
+
 let genreSearchResults = [];
 let genreRenderedCount = 0;
 const GENRE_RESULTS_PER_BATCH = 20;
@@ -2337,18 +2057,13 @@ async function showGenreStationList(selectedTag) {
          }, 100);
          
      
-     setTimeout(() => {
-       // loadingSpinner2.style.display = "block";
-    }, 300);
-   // console.log("1");
+  
     genreRenderedCount = 0;
     content.scrollTop = 0;
     genreListActive = true;
 
     try {
-      //  const response = await fetch("http://localhost:3000/stations");
-       // const stations = await response.json();
-       // console.log("v2"+stations[2]);
+     
         
         genreSearchResults = stationsMaster
     .filter(station =>
@@ -2375,12 +2090,9 @@ async function showGenreStationList(selectedTag) {
 }
 
 
-
 function loadMoreGenreStations() {
     const stationList = document.getElementById('genreStationList');
     const nextBatch = genreSearchResults.slice(genreRenderedCount, genreRenderedCount + GENRE_RESULTS_PER_BATCH);
-    //console.log("3");
-   
 
     nextBatch.forEach(station => {
         const listItem = document.createElement("li");
@@ -2402,10 +2114,10 @@ function loadMoreGenreStations() {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
-           // revealHeart(listItem);
+         
             
         });
-       // console.log("4");
+  
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
 
@@ -2463,23 +2175,23 @@ genreContentDiv.addEventListener("scroll", () => {
 }
     }
 });
-// Function to generate the list items dynamically
+
 function generateTagList() {
     tags.forEach(tag => {
-        // Create list item
+   
         const listItem = document.createElement('li');
         listItem.classList.add('list-item', 'genre');
         
         listItem.textContent = tag;
 
-        // Create arrow using local SVG file
+    
         const arrowSpan = document.createElement('span');
         arrowSpan.classList.add('arrow');
       
         const arrowImg = document.createElement('img');
-        arrowImg.src = 'sidearrow.svg'; // adjust the path as needed
+        arrowImg.src = 'sidearrow.svg'; 
         arrowImg.alt = 'arrow';
-        arrowImg.width = 16; // or whatever size fits
+        arrowImg.width = 16;
         arrowImg.height = 16;
 
         arrowSpan.appendChild(arrowImg);
@@ -2487,10 +2199,7 @@ function generateTagList() {
         listItem.addEventListener('click', () => {
             showGenreStationList(tag);
         });
-        // Add click event
-       
-
-        // Append to list
+      
         tagsListContainer.appendChild(listItem);
     });
 }
@@ -2522,11 +2231,9 @@ function openCountryList(){
    
    container.style.transform = "translateX(-33.33%)"
    generateCountryList();
-  // countrybackbuttontext.textContent = country;
-   //content.scrollTop = 0;
-   countrybackbutton.style.display = "block"; // or "block" depending on layout
 
-   // Allow a slight delay if needed to ensure layout updates
+   countrybackbutton.style.display = "block"; 
+
    setTimeout(() => {
  requestAnimationFrame(() => {
      countrybackbutton.style.opacity = "1";
@@ -2538,58 +2245,6 @@ function openCountryList(){
 
 const countryListContainer = document.getElementById('panel2list');
 
-
-
-
-/* 
-function generateCountryList() {
-    const sortedNames = countryNames.sort();
-
-    sortedNames.forEach(country => {
-        const listItem = document.createElement('li');
-        listItem.classList.add('list-item', 'genre');
-
-        const capitalisedCountry = formatCountryName(country);
-
-        // Create a wrapper for the left text (country name)
-        const textSpan = document.createElement('span');
-        textSpan.textContent = capitalisedCountry;
-        listItem.appendChild(textSpan);
-
-        // Calculate number of stations for this country
-        const stationCount = stationsMaster.filter(station =>
-            station.country.toLowerCase() === country.toLowerCase()
-        ).length;
-
-        // Create blue circle with number
-        const circle = document.createElement('span');
-        circle.classList.add('blue-circle');
-        circle.textContent = stationCount;
-        listItem.appendChild(circle);
-
-        // Create arrow icon
-        const arrowSpan = document.createElement('span');
-        arrowSpan.classList.add('arrow');
-
-        const arrowImg = document.createElement('img');
-        arrowImg.src = 'sidearrow.svg';
-        arrowImg.alt = 'arrow';
-        arrowImg.width = 16;
-        arrowImg.height = 16;
-
-        arrowSpan.appendChild(arrowImg);
-        listItem.appendChild(arrowSpan);
-
-        // Click event
-        listItem.addEventListener('click', () => {
-            fetchStationsByCountry(country, false);
-        });
-
-        countryListContainer.appendChild(listItem);
-    });
-}
-
-*/
 
 function generateCountryList() {
     const sortedCountries = countryNames.sort((a, b) => 
@@ -2630,12 +2285,10 @@ function generateCountryList() {
 
         listItem.appendChild(rightSide);
 
-        // Click event for fetching country stations
         listItem.addEventListener('click', () => {
             fetchStationsByCountry(name, false);
         });
 
-        // Append to container
         countryListContainer.appendChild(listItem);
     });
 }
@@ -2654,11 +2307,6 @@ async function fetchStationsByCountry(country, title) {
    
     const content = document.getElementById("content");
     
-   // document.getElementById("country1list").style.display = "none";
-    //document.getElementById("country2list").style.display = "none";
-    
-
-
 
    if(!title){
    
@@ -2684,7 +2332,7 @@ async function fetchStationsByCountry(country, title) {
    
    countryRenderedCount = 0;
    countrybackbuttontext.textContent = formatCountryName(country);
-   //content.scrollTop = 0;
+
    countrybackbutton.style.display = "block";
    setTimeout(() => {
     requestAnimationFrame(() => {
@@ -2693,15 +2341,9 @@ async function fetchStationsByCountry(country, title) {
       });
      }, 100);
 
-   
-   
-   //countryListActive = true;
-   
+
     try {
      
-       // const response = await fetch("http://localhost:3000/stations");
-      //  const stations = await response.json();
-       // console.log("0"+country);
         countrySearchResults = stationsMaster
             .filter(station =>
                 station.url &&          
@@ -2710,14 +2352,13 @@ async function fetchStationsByCountry(country, title) {
             .filter((station, index, self) =>
                 index === self.findIndex(s => s.name === station.name)
             );
-          //  console.log("1"+stations[0].country);
 
 
             if (countrySearchResults.length === 0) {
                 console.log("nothing found");
             } else {
                 loadCountrySearchResults(title);
-                 // Load initial batch
+          
             }
         
     } catch (error) {
@@ -2755,8 +2396,6 @@ function scrollToCountry(countryName) {
 }
 
 
-
-
 let backhome = true;
 
 function countryBack() {
@@ -2766,8 +2405,7 @@ function countryBack() {
     const content = document.querySelector(".content");
   
    if(backhome){
-    //document.getElementById("country1list").style.display = "block";
-//document.getElementById("country2list").style.display = "block";
+
 document.getElementById("country3list").style.display = "block";
     container.style.transform = 'translateX(0%)'; 
     content.scrollTop = 0;
@@ -2780,7 +2418,6 @@ document.getElementById("country3list").style.display = "block";
       countrybackbutton.style.opacity = "0";
       countrybackbutton.style.pointerEvents = "none";
       
-      // Optionally remove it completely after fade
       setTimeout(() => {
         countrybackbutton.style.display = "none";
       }, 300);
@@ -2790,14 +2427,9 @@ document.getElementById("country3list").style.display = "block";
     openCountryList();
        
     container.style.transform = 'translateX(-33.33%)';
-   // content.scrollTop = 0;
     
         document.getElementById("panel3list").innerHTML = "";
-      
-      
 
-     
-   
         content.scrollTop = previousscrollposition;
      
     countrySearchResults = [];
@@ -2807,29 +2439,17 @@ document.getElementById("country3list").style.display = "block";
     backhome = true;
    
    }
-   // backbutton.style.transform = 'translateX(0%)';
-    // Clear list if needed (e.g., clearing the list inside the container)
-   
-   
-   
 
 }
 
 
 function loadCountrySearchResults(title){
     
- 
-  
         const panel2list = document.getElementById('panel2list');
- 
         const panel3list = document.getElementById('panel3list');
-        console.log("2");
-   
    
     const nextBatch = countrySearchResults.slice(countryRenderedCount, countryRenderedCount + COUNTRY_RESULTS_PER_BATCH);
-   console.log(nextBatch);
    
-
     nextBatch.forEach(station => {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
@@ -2850,12 +2470,9 @@ function loadCountrySearchResults(title){
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
-           // revealHeart(listItem);
-           
+       
         });
 
-        console.log("3");
-       // console.log("4");
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
 
@@ -2871,18 +2488,15 @@ function loadCountrySearchResults(title){
        }else{
         locationText.textContent = `${station.country}`;
        }
-       
-       
+        
         textWrapper.appendChild(locationText);
 
 if(firstStation == 1){
     listItem.classList.add("toplistmargin");
     firstStation = 0;
 }
-
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
-
 
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
@@ -2902,19 +2516,12 @@ if(firstStation == 1){
     countryRenderedCount += nextBatch.length;
 }
 
-
-
-// Create two spheres
-
-
-
-// Animation function using GSAP
 function expandAndFade(sphere) {
-// Reset scale and opacity
+
 gsap.set(sphere.scale, { x: 0.1, y: 0.1, z: 0.1 });
 sphere.material.opacity = 1;
 
-// Animate scale and opacity
+
 gsap.to(sphere.scale, {
   x: 50,
   y: 50,
@@ -2930,18 +2537,15 @@ gsap.to(sphere.material, {
 });
 }
 
-// Optional: Looping logic (if you want repeating pulse)
 function loopPulse(sphere0, delay = 0) {
 
 
 gsap.delayedCall(delay, () => {
   expandAndFade(sphere0);
-  loopPulse(sphere0, 3); // Recursively pulse every 3 seconds
+  loopPulse(sphere0, 3); 
 });
 
 }
-
-
 
 document.addEventListener("DOMContentLoaded", () => {
     loopPulse(sphere0, 0);
@@ -2967,17 +2571,10 @@ function formatCountryName(country) {
 
 async function getCountryStations(country, header, list){ {
    
-    
 
-
-
-   // const localloadingspinner = document.getElementById("local-loading-spinner");
-    //localloadingspinner.style.display = "block";
     header.textContent = formatCountryName(country);
 
     try {
-      //  const response = await fetch("http://localhost:3000/stations");
-      //  const stations = await response.json();
 
         const countrySearchResults = stationsMaster
             .filter(station =>
@@ -3002,7 +2599,7 @@ async function getCountryStations(country, header, list){ {
         li.textContent = "An error occurred while fetching stations.";
         list.appendChild(li);
     } finally {
-       // localloadingspinner.style.display = "none";
+
     }
 }
 
@@ -3010,15 +2607,10 @@ async function getCountryStations(country, header, list){ {
 }
 
 
-
-
-
-
 function loadCountryStations(countrySearchResults, list) {
     
-    list.innerHTML = ''; // Clear previous results
-   // const localloadingspinner = document.getElementById("local-loading-spinner");
-    // Shuffle the array and take 10 random stations
+    list.innerHTML = ''; 
+
     const shuffled = countrySearchResults.sort(() => 0.5 - Math.random());
     const selectedStations = shuffled.slice(0, 5);
 
@@ -3026,8 +2618,6 @@ function loadCountryStations(countrySearchResults, list) {
         const listItem = document.createElement("li");
         listItem.classList.add("list-item");
     
-      
-      
         listItem.addEventListener("click", () => {
             firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
@@ -3046,7 +2636,7 @@ function loadCountryStations(countrySearchResults, list) {
             currentlistitem = listItem;
             highlightListItem();
             wrangleHeart();
-           // revealHeart(listItem);
+    
         });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
@@ -3078,22 +2668,7 @@ function loadCountryStations(countrySearchResults, list) {
         list.appendChild(listItem);
     });
 
-   // localloadingspinner.style.display = "none";
-
-  
-    
 }
-
-
-
-
-
-
-
-
-
-
-
 
 async function getThreeRandomCountries() {
     const shuffled = [...countryNames].sort(() => 0.5 - Math.random());
@@ -3113,12 +2688,9 @@ async function getThreeRandomCountries() {
     getCountryStations(name3, header3, list3);
 }
 
-  
-
-  
   document.addEventListener("DOMContentLoaded", async () => {
-    await fetchStationsFromAPI(); // Wait until stationsMaster is filled
-    getThreeRandomCountries();    // Now safe to run this
+    await fetchStationsFromAPI(); 
+    getThreeRandomCountries();    
 
     const countryDivs = document.querySelectorAll('.spider');
     countryDivs.forEach(div => {
@@ -3133,7 +2705,6 @@ async function getThreeRandomCountries() {
 });
 
 
-// Generate the list on page load
 generateTagList();
 toggleButtonVisibility();
 fetchStationsFromAPI(500000);
