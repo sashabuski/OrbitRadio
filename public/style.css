@@ -668,7 +668,7 @@
     .loadingImage {
         width: auto;
         height: 250px;
-        margin-bottom: 20px;
+        margin-bottom: 0px;
       }
       
     
@@ -688,7 +688,7 @@
         height: 100%;
         background-color: rgba(71,78,166, 1);
         color: #b9c4ff;
-        font-size: 2rem;
+        font-size: 1.4rem;
         display: flex;
         justify-content: center;
         align-items: center;
