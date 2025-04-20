@@ -75,10 +75,18 @@ let firstStation = 1;
 
 const markerGroup = new THREE.Group();
 scene.add(markerGroup);
+const uprightFix = new THREE.Euler(
+ 0,   // Rotate X
+   1,  // Maybe flip Y
+    0 
+);
+
+sphereGroup.quaternion.setFromEuler(uprightFix);
 
 
 
 
+console.log('Quaternion at load:', sphereGroup.quaternion);
 const markerGeometry1 = new THREE.SphereGeometry(1, 16, 16); // radius, width segments, height segments
 const markerWireframe1 = new THREE.WireframeGeometry(markerGeometry1);
 
@@ -361,8 +369,7 @@ function addStationsAsParticles() {
   particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     particles = new THREE.Points(particleGeometry, particleMaterial);
     sphereGroup.add(particles);
-}   
-
+}
 
 function showTab(tabNumber) {
     // Hide all tab content
@@ -598,12 +605,6 @@ startmarkerFlashing();
             targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
             isRotatingToTarget = true;
         }
-
-
-
-
-
-
 
         pulseVisible = true;
 
@@ -1000,25 +1001,36 @@ function onMouseDown(event) {
 
 function onMouseMove(event) {
     if (!isDragging) return;
-    if (isDragging && !boxclick){
+    if (isDragging && !boxclick) {
 
         tooltip.style.visibility = "hidden";
         tooltip.style.opacity = "0";
         hoverCircle.visible = false;
         isRotatingToTarget = false;
-    const deltaX = event.clientX - previousMousePosition.x;
-    const deltaY = event.clientY - previousMousePosition.y;
 
-    const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized from 0 to 1
-    const rotationSpeed = 0.002 * (0.3 + 0.7 * distanceScale);
-    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
-        dragged = true; // Mark as dragged if moved enough
+        const deltaX = event.clientX - previousMousePosition.x;
+        const deltaY = event.clientY - previousMousePosition.y;
+
+        const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized from 0 to 1
+        const rotationSpeed = 0.002 * (0.3 + 0.7 * distanceScale);
+
+        if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+            dragged = true; // Mark as dragged if moved enough
+        }
+
+        // Quaternion rotation instead of Euler angles
+        const quaternionY = new THREE.Quaternion();
+        quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), deltaX * rotationSpeed);
+
+        const quaternionX = new THREE.Quaternion();
+        quaternionX.setFromAxisAngle(new THREE.Vector3(1, 0, 0), deltaY * rotationSpeed);
+
+        // Combine the rotations (Y first, then X)
+        const combinedRotation = new THREE.Quaternion().copy(quaternionY).multiply(quaternionX);
+        sphereGroup.quaternion.premultiply(combinedRotation);
+
+        previousMousePosition = { x: event.clientX, y: event.clientY };
     }
-    sphereGroup.rotation.y += deltaX * rotationSpeed;
-    sphereGroup.rotation.x += deltaY * rotationSpeed;
-
-    previousMousePosition = { x: event.clientX, y: event.clientY };
-}
 }
 
 function onMouseMoveRaycast(event) {
@@ -1227,16 +1239,20 @@ const normalizedZoom = (camera.position.z - 105) / zoomRange; // 0 (close) to 1 
 const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
+console.log(sphereGroup.quaternion);
 //console.log("previuos:" + previousscrollposition);
 //console.log(contentDiv.scrollTop);
    // console.log(sphere0.visible);
-   
    if (!hoverCircle.visible && !isRotatingToTarget) {
     const distanceScale = (camera.position.z - 130) / (230 - 130); // Normalized 0 to 1
     const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);   // Slower when zoomed in
-    sphereGroup.rotation.y += autoRotateSpeed;
+
+    const quaternionY = new THREE.Quaternion();
+    quaternionY.setFromAxisAngle(new THREE.Vector3(0, 1, 0), autoRotateSpeed);
+
+    sphereGroup.quaternion.premultiply(quaternionY);
 }
+
 
 if (isRotatingToTarget) {
     sphereGroup.quaternion.slerp(targetQuaternion, 0.08); // Smooth interpolation
