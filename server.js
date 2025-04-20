@@ -60,7 +60,15 @@ app.get("/stations/:uuid", async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-
+app.get("/test", async (req, res) => {
+    try {
+      const result = await client.db("OrbitRadio").collection("Stations").findOne({});
+      res.json(result || { message: "No documents found" });
+    } catch (err) {
+      console.error("❌ /test route error:", err);
+      res.status(500).json({ error: "Test route failed" });
+    }
+  });
 
 app.get("/", (req, res) => {
     res.send("Welcome to OrbitRadio API!");
