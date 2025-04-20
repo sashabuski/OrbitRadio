@@ -12,7 +12,9 @@ const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
 
 app.use(cors({
-    origin: 'https://orbitradio96.onrender.com'  // Allow only your frontend
+    origin: 'https://orbitradio96.onrender.com',
+    methods: ['GET', 'POST'],
+    credentials: true
   }));
 
 // Connect to MongoDB
