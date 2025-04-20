@@ -61,6 +61,10 @@ app.get("/stations/:uuid", async (req, res) => {
     }
 });
 
+
+app.get("/", (req, res) => {
+    res.send("Welcome to OrbitRadio API!");
+});
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
