@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const cors = require("cors");
 const { MongoClient } = require("mongodb");
@@ -6,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Replace with your actual MongoDB Atlas URI
-const uri = "mongodb+srv://sashab:sashab123@cluster0.binjkw6.mongodb.net/OrbitRadio?retryWrites=true&w=majority";
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
 
 app.use(cors({
