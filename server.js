@@ -1,81 +1,45 @@
-require('dotenv').config();
-
 const express = require("express");
 const cors = require("cors");
-const { MongoClient } = require("mongodb");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Replace with your actual MongoDB Atlas URI
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
 
 app.use(cors({
-    origin: 'https://orbitradio96.onrender.com',
-    methods: ['GET', 'POST'],
-    credentials: true
+    origin: 'https://orbitradio96.onrender.com'  // Allow only your frontend
   }));
 
-// Connect to MongoDB
-async function connectToMongo() {
-    try {
-        await client.connect();
-        console.log("✅ Connected to MongoDB Atlas");
-    } catch (err) {
-        console.error("❌ MongoDB connection error:", err);
-    }
+// Load JSON data
+let stations;
+try {
+    stations = JSON.parse(fs.readFileSync("stations.json"));
+    console.log("Stations loaded successfully!");
+} catch (error) {
+    console.error("Error loading stations.json:", error);
 }
-connectToMongo();
 
-// Route: Get all stations
-app.get("/stations", async (req, res) => {
-    try {
-        const stations = await client
-            .db("OrbitRadio")
-            .collection("Stations")
-            .find({})
-            .toArray();
-
-        res.json(stations);
-    } catch (error) {
-        console.error("Error fetching stations:", error);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
+// Route to get all stations
+app.get("/stations", (req, res) => {
+    res.json(stations);
 });
 
-// Route: Get single station by UUID
-app.get("/stations/:uuid", async (req, res) => {
-    try {
-        const station = await client
-            .db("OrbitRadio")
-            .collection("Stations")
-            .findOne({ stationuuid: req.params.uuid });
+// Route to get a single station by UUID
+app.get("/stations/:uuid", (req, res) => {
+    const stationUUID = req.params.uuid;
+    console.log(`Looking for station with UUID: ${stationUUID}`);
 
-        if (!station) {
-            return res.status(404).json({ message: "Station not found" });
-        }
-
-        res.json(station);
-    } catch (error) {
-        console.error("Error fetching station:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+    const station = stations.find(s => s.stationuuid === stationUUID);
+    if (!station) {
+        console.log("Station not found");
+        return res.status(404).json({ message: "Station not found" });
     }
-});
-app.get("/test", async (req, res) => {
-    try {
-      const result = await client.db("OrbitRadio").collection("Stations").findOne({});
-      res.json(result || { message: "No documents found" });
-    } catch (err) {
-      console.error("❌ /test route error:", err);
-      res.status(500).json({ error: "Test route failed" });
-    }
-  });
 
-app.get("/", (req, res) => {
-    res.send("Welcome to OrbitRadio API!");
+    console.log("Station found:", station);
+    res.json(station);
 });
-// Start server
+
+// Start the server
 app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });

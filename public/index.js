@@ -306,7 +306,7 @@ async function fetchStationsFromAPI(limit = 500000) {
     
     showLoadingOverlay();
     try {
-        const response = await fetch('https://orbitradio.onrender.com/stations'); // Fetch from API
+        const response = await fetch('http://localhost:3000/stations'); // Fetch from API
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -399,12 +399,16 @@ function showTab(tabNumber) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-
     document.querySelectorAll('.tab-button').forEach((button, index) => {
-        button.addEventListener('click', () => showTab(index + 1));
+        button.addEventListener('click', () => {
+            showTab(index + 1);
+            document.getElementById("content").scrollTop = 0;
+        });
     });
-showTab(3);
+
+    showTab(3);
 });
+
 document.addEventListener("DOMContentLoaded", () => {
     // Function to show the content of the selected tab
    
@@ -874,7 +878,7 @@ function onClick(event) {
     material0.opacity = 0;
     material1.opacity = 0;
 
-    console.log("onClick");
+    //console.log("onClick");
 
     const hoveredElement = document.elementFromPoint(event.clientX, event.clientY);
     if (!(hoveredElement instanceof HTMLCanvasElement)) {
@@ -1171,9 +1175,9 @@ nameText.style.animation = 'scrollText 15s linear infinite';
   
 
 function onMouseUp() {
-    console.log("isDragging: "+isDragging);
+   // console.log("isDragging: "+isDragging);
     isDragging = false;
-    console.log("isDragging: "+isDragging);
+   // console.log("isDragging: "+isDragging);
     
 }
 
@@ -1482,11 +1486,14 @@ function loadLocalStations(localSearchResults) {
       
       
         listItem.addEventListener("click", () => {
+            
+            firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
+            playBtn.classList.add("disabledPlay2");
             updatePlayer(station);
             currentStation = station;
             
-            firstsong = false;
+           
             if(currentlistitem){
             currentlistitem.style.backgroundColor = "";
             currentlistitem.style.color = "";
@@ -1546,14 +1553,14 @@ getLocalStations();
 
 
 function revealHeart(listItem){
-    console.log("Jeessica");
+   // console.log("Jeessica");
     const removeButton = listItem.querySelector('.remove-btn');
     
     //removeButton.display.height = 50;
     removeButton.classList.add("revealHeart");
    
-    console.log(removeButton);
-    console.log(removeButton.classList);
+   // console.log(removeButton);
+   // console.log(removeButton.classList);
 }
 /*FAVOURITES 
 *
@@ -1565,7 +1572,7 @@ function revealHeart(listItem){
 function updateFavoritesList() {
     favorites = getFavoriteStations(); // Retrieve favorite stations from localStorage or cookies
     const favoritesList = document.querySelector("#tab-1 .list");
-
+console.log(favorites);
     favoritesList.innerHTML = ''; // Clear the existing list before updating
 
     favorites.forEach(station => {
@@ -1574,6 +1581,7 @@ function updateFavoritesList() {
             listItem.classList.add("list-item");
 
             listItem.addEventListener("click", () => {
+                firstsong = false;
                 if (currentlistitem) {
                     currentlistitem.style.backgroundColor = "";
                     currentlistitem.style.color = "";
@@ -1587,7 +1595,7 @@ function updateFavoritesList() {
                 highlightListItem();
                 toggleButtonVisibility();
                 wrangleHeart();
-                firstsong = false;
+                
             });
 
             // Wrapper for styling
@@ -1600,6 +1608,7 @@ function updateFavoritesList() {
 
             const locationText = document.createElement("h2");
             locationText.classList.add("locationtext");
+           
             locationText.textContent = station.state
                 ? `${station.state}, ${station.country}`
                 : station.country;
@@ -1708,18 +1717,19 @@ function handleHeartClick(event) {
 
     favorites = getFavoriteStations();
 
-    // Check if the station is already in the favorites
+ 
     if (!isFavorite) {
-        favorites.push(currentStation);  // Add station to favorites
-        saveFavoriteStations(favorites);  // Save updated favorites
-       // console.log(`${currentStation} added to favorites`);
+        
+        favorites.push(currentStation); 
+        saveFavoriteStations(favorites); 
+    
         updateFavoritesList();
        let heartButton = event.target.parentElement.parentElement;
-      // console.log("okwhat is this"+event.target.parentElement.parentElement)
-        updateHeartButton(heartButton, true); // Change heart to red
+    
+        updateHeartButton(heartButton, true); 
     } else {
         removeFavorite(currentStation);
-        //console.log("wokywokoakwokw");
+       
         updateHeartButton(heartButton, false); 
         
 
@@ -2171,6 +2181,7 @@ function updateSearchResults(results, append = false) {
         listItem.classList.add("list-item");
 
         listItem.addEventListener("click", () => {
+            firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
             updatePlayer(station);
             currentStation = station;
@@ -2186,7 +2197,7 @@ function updateSearchResults(results, append = false) {
             highlightListItem();
             wrangleHeart();
             //revealHeart(listItem);
-            firstsong = false;
+           
         });
 
         const contentWrapper = document.createElement("div");
@@ -2360,6 +2371,7 @@ function loadMoreGenreStations() {
         listItem.classList.add("list-item");
 
         listItem.addEventListener("click", () => {
+            firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
             updatePlayer(station);
             currentStation = station;
@@ -2375,7 +2387,7 @@ function loadMoreGenreStations() {
             highlightListItem();
             wrangleHeart();
            // revealHeart(listItem);
-            firstsong = false;
+            
         });
        // console.log("4");
         const contentWrapper = document.createElement("div");
@@ -2673,7 +2685,7 @@ async function fetchStationsByCountry(country, title) {
      
        // const response = await fetch("http://localhost:3000/stations");
       //  const stations = await response.json();
-        console.log("0"+country);
+       // console.log("0"+country);
         countrySearchResults = stationsMaster
             .filter(station =>
                 station.url &&          
@@ -2807,6 +2819,7 @@ function loadCountrySearchResults(title){
         listItem.classList.add("list-item");
 
         listItem.addEventListener("click", () => {
+            firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
             updatePlayer(station);
             currentStation = station;
@@ -2822,7 +2835,7 @@ function loadCountrySearchResults(title){
             highlightListItem();
             wrangleHeart();
            // revealHeart(listItem);
-            firstsong = false;
+           
         });
 
         console.log("3");
@@ -3000,11 +3013,12 @@ function loadCountryStations(countrySearchResults, list) {
       
       
         listItem.addEventListener("click", () => {
+            firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
             updatePlayer(station);
             currentStation = station;
             
-            firstsong = false;
+           
             if(currentlistitem){
             currentlistitem.style.backgroundColor = "";
             currentlistitem.style.color = "";
