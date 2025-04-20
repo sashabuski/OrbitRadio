@@ -314,7 +314,7 @@ async function fetchStationsFromAPI(limit = 500000) {
     
     showLoadingOverlay();
     try {
-        const response = await fetch('http://localhost:3000/stations'); // Fetch from API
+        const response = await fetch('http://orbitradio96.onrender.com/'); // Fetch from API
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
