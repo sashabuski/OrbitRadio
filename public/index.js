@@ -17,7 +17,7 @@ const audioPlayer = new Audio();
 audioPlayer.volume = 0.5;
 const stationsList = [];
 const particleIndexMap = new Map();
-
+const cityParticleIndexMap = new Map();
 let particleGeometry;
 
 const scene = new THREE.Scene();
@@ -44,7 +44,7 @@ const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,
     transparent: true });
 
 
-
+let targetPosition;
 const line = new THREE.LineSegments(wireframe, material);
 sphereGroup.add(line);
 let currentStation;
@@ -59,7 +59,7 @@ let circleMaterial = new THREE.MeshBasicMaterial({
 let hoverCircle = new THREE.Mesh(circleGeometry, circleMaterial);
 hoverCircle.visible = false;
 scene.add(hoverCircle);
-
+let markerPosition;
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5, 3, 5);
