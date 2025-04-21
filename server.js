@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 
 // ❗ Your original CORS — unchanged
 app.use(cors({
-  origin: 'https://orbitradio96.onrender.com'
+  origin: 'https://www.orbitrad.io'
 }));
 
 // Load JSON data
