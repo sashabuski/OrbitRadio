@@ -1097,7 +1097,7 @@ const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
 
-   if (!hoverCircle.visible && !isRotatingToTarget && !isDragging) {
+   if (!hoverCircle.visible && !isRotatingToTarget) {
     const distanceScale = (camera.position.z - 130) / (230 - 130); 
     const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);  
 
