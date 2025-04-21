@@ -295,8 +295,8 @@ function hideLoadingOverlay() {
         }
 
         // Optional: Filter only stations with a state
-        const filteredStations = stationsMaster.filter(station => station.state);
-
+        //const filteredStations = stationsMaster.filter(station => station.state);
+console.log("stations master length: "+stationsMaster.length);
         // Apply your frontend limit
         stationsList.push(...filteredStations.slice(0, limit));
         addStationsAsParticles();
