@@ -276,29 +276,40 @@ function hideLoadingOverlay() {
     }, 500); 
   }
   
-
-async function fetchStationsFromAPI(limit = 500000) {
-    
+  async function fetchStationsFromAPI(limit = 500000) {
     showLoadingOverlay();
+
     try {
-        const response = await fetch('https://orbitradio.onrender.com/stations'); 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        const batchSize = 7000;
+        const totalBatches = 2;
+        stationsMaster = [];
+
+        for (let i = 0; i < totalBatches; i++) {
+            const start = i * batchSize;
+            const response = await fetch(`https://orbitradio.onrender.com/stations?start=${start}&limit=${batchSize}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const batch = await response.json();
+            stationsMaster.push(...batch);
         }
 
-        stationsMaster = await response.json();
-        const filteredStations = stationsMaster.filter(stationsMaster => stationsMaster.state);
+        // Optional: Filter only stations with a state
+        const filteredStations = stationsMaster.filter(station => station.state);
 
+        // Apply your frontend limit
         stationsList.push(...filteredStations.slice(0, limit));
-        addStationsAsParticles(); 
-       await dataLoaded();
+        addStationsAsParticles();
+        await dataLoaded();
+
         console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
         console.error('Error fetching stations from API:', error);
-    }finally{
+    } finally {
         hideLoadingOverlay();
     }
 }
+
 
 async function dataLoaded(){
     await getLocalStations();
