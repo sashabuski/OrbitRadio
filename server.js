@@ -5,12 +5,12 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS for both Netlify and localhost (dev)
+// ❗ Your original CORS — unchanged
 app.use(cors({
-  origin: ['https://orbitradio.netlify.app', 'http://localhost:5500']
+  origin: 'https://orbitradio96.onrender.com'
 }));
 
-// Load stations from JSON file
+// Load JSON data
 let stations;
 try {
   stations = JSON.parse(fs.readFileSync("src/stations.json"));
@@ -20,7 +20,7 @@ try {
   stations = [];
 }
 
-// Route to get a slice of stations with ?start= and ?limit=
+// ✅ Route to get stations in chunks using ?start= and ?limit=
 app.get("/stations", (req, res) => {
   const start = parseInt(req.query.start) || 0;
   const limit = parseInt(req.query.limit) || stations.length;
@@ -28,7 +28,7 @@ app.get("/stations", (req, res) => {
   res.json(sliced);
 });
 
-// Optional route to get total station count
+// Optional: total count of stations
 app.get("/stations/count", (req, res) => {
   res.json({ count: stations.length });
 });
@@ -48,7 +48,7 @@ app.get("/stations/:uuid", (req, res) => {
   res.json(station);
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
