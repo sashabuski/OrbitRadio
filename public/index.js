@@ -44,7 +44,7 @@ let hoverCircleSize = 2;
 
 const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  
     transparent: true });
-
+let isHoveringTooltip = false; 
 
 let targetPosition;
 const line = new THREE.LineSegments(wireframe, material);
@@ -1086,7 +1086,7 @@ const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
 
-   if (!hoverCircle.visible && !isRotatingToTarget) {
+   if (!hoverCircle.visible && !isRotatingToTarget && !isDragging) {
     const distanceScale = (camera.position.z - 130) / (230 - 130); 
     const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);  
 
