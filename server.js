@@ -13,7 +13,7 @@ app.use(cors({
 // Load JSON data
 let stations;
 try {
-    stations = JSON.parse(fs.readFileSync("stations.json"));
+    stations = JSON.parse(fs.readFileSync("src/stations.json"));
     console.log("Stations loaded successfully!");
 } catch (error) {
     console.error("Error loading stations.json:", error);
