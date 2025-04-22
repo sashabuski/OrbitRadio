@@ -43,7 +43,7 @@ const wireframe = new THREE.WireframeGeometry(geometry);
 let hoverCircleSize = 2;
 
 const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  
-    transparent: true });
+    transparent: true,  depthWrite: false });
 let isHoveringTooltip = false; 
 
 let targetPosition;
@@ -2717,6 +2717,67 @@ async function getThreeRandomCountries() {
         });
     });
 });
+
+
+
+
+
+function latLonToVector3(lat, lon, radius) {
+    const phi = (90 - lat) * Math.PI / 180;
+    const theta = (lon + 180) * Math.PI / 180;
+    return new THREE.Vector3(
+      -radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.cos(phi),
+      radius * Math.sin(phi) * Math.sin(theta)
+    );
+  }
+
+  function drawCountryBorders(features, radius) {
+    features.forEach(feature => {
+      const coords = feature.geometry.coordinates;
+      const type = feature.geometry.type;
+
+      // Logging data to ensure it's correct
+      console.log(`Drawing ${feature.properties.name}...`);
+      
+      const drawRing = (ring) => {
+        const points = ring.map(([lon, lat]) => latLonToVector3(lat, lon, radius));
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.9,  
+            transparent: true  });
+        const line = new THREE.Line(geometry, material);
+        sphereGroup.add(line);
+      };
+
+      if (type === "Polygon") {
+        coords.forEach(drawRing);
+      } else if (type === "MultiPolygon") {
+        coords.forEach(polygon => polygon.forEach(drawRing));
+      }
+    });
+  }
+
+  fetch('https://orbitradio.onrender.com/countries')
+  .then(response => response.json())
+  .then(data => {
+    console.log('GeoJSON countries data loaded:', data);
+    drawCountryBorders(data.features, 98); // Pass the countries data (features) to your map rendering function
+  })
+  .catch(error => {
+    console.error('Error loading countries GeoJSON:', error);
+  });
+
+  // Draw the country borders
+  // Extract features from the geojson
+
+  // Optional wireframe globe
+
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
 
 
 generateTagList();
