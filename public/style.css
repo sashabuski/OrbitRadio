@@ -804,6 +804,10 @@
     transition: transform 0.2s ease, filter 1s ease;
     }
     
+    .volume-btn-dark{
+        filter: invert(46%) sepia(65%) saturate(1449%) hue-rotate(324deg) brightness(81%) contrast(81%);
+    }
+    
     /* Hover effect */
     .volume-btn:hover {
     transform: scale(1.05);
@@ -1064,5 +1068,28 @@
     
     
     
-    
+    #mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 100vw;
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        font-size: 1.5rem;
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 1rem;
+      }
+      
+      /* Show the overlay on mobile devices */
+      @media only screen and (max-width: 768px) {
+        #mobile-overlay {
+          display: flex;
+        }
+      }
+      
     

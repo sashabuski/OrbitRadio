@@ -42,13 +42,13 @@ const geometry = new THREE.SphereGeometry(98, 40, 40);
 const wireframe = new THREE.WireframeGeometry(geometry);
 let hoverCircleSize = 2;
 
-const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.2,  
-    transparent: true,  depthWrite: false });
-let isHoveringTooltip = false; 
+const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.1,  
+    transparent: true,  depthWrite: false});
+ let isHoveringTooltip = false; 
 
 let targetPosition;
 const line = new THREE.LineSegments(wireframe, material);
-sphereGroup.add(line);
+sphereGroup.add(line); 
 let currentStation;
 let circleGeometry = new THREE.CircleGeometry(hoverCircleSize, 32);
 let circleMaterial = new THREE.MeshBasicMaterial({
@@ -243,7 +243,7 @@ particleGeometry = new THREE.BufferGeometry();
         updatePlayer(currentStation);
 toggleButtonVisibility();
         updateFavoritesList(); 
-            highlightListItem();
+            highlightListItem(currentlistitem);
             wrangleHeart();
         if (recentStation) {
             console.log("Most recent station:", recentStation.name);
@@ -276,40 +276,29 @@ function hideLoadingOverlay() {
     }, 500); 
   }
   
+
 async function fetchStationsFromAPI(limit = 500000) {
+    
     showLoadingOverlay();
-
-    try {
-        const batchSize = 7000;
-        const totalBatches = 2;
-        stationsMaster = [];
-
-        for (let i = 0; i < totalBatches; i++) {
-            const start = i * batchSize;
-            const response = await fetch(`https://orbitradio.onrender.com/stations?start=${start}&limit=${batchSize}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            const batch = await response.json();
-            stationsMaster.push(...batch);
+    try {                            //https://orbitradio.onrender.com/stations  
+        const response = await fetch('https://orbitradio.onrender.com/stations?start=${start}&limit=${batchSize}'); 
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
-        // Optional: Filter only stations with a state
-        const filteredStations = stationsMaster;
-console.log("SMASTER: "+stationsMaster.length);
-        // Apply your frontend limit
-        stationsList.push(...filteredStations.slice(0, limit));
-        addStationsAsParticles();
-        await dataLoaded();
+        stationsMaster = await response.json();
+        const filteredStations = stationsMaster.filter(stationsMaster => stationsMaster.state);
 
+        stationsList.push(...filteredStations.slice(0, limit));
+        addStationsAsParticles(); 
+       await dataLoaded();
         console.log(`Loaded ${filteredStations.length} stations.`);
     } catch (error) {
         console.error('Error fetching stations from API:', error);
-    } finally {
+    }finally{
         hideLoadingOverlay();
     }
 }
-
 
 async function dataLoaded(){
     await getLocalStations();
@@ -462,16 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-
-
-function updatePlayer(station) {
-    const box = document.querySelector('.loadFailedBox');
-    box.classList.remove('show');
-    box.classList.add('hide');
-
-    sphere1.visible = false;
-    sphere0.visible = false;
-
+function setupMarker(station){
 const direction = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
 const baseDistance = 102.05;
 
@@ -501,9 +481,68 @@ sphereGroup.add(sphere1);
 
 fadeInMarkers();
 startmarkerFlashing();
+}
 
-    updateStationHistory(station);
-    getMostRecentStations();
+function rotateSphere(station){
+    const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
+    const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
+    targetDirection.applyQuaternion(currentRotation);
+
+    const forward = new THREE.Vector3(0, 0, 1);
+    const rotationAxis = new THREE.Vector3().crossVectors(targetDirection, forward).normalize();
+    const angle = Math.acos(Math.min(Math.max(targetDirection.dot(forward), -1), 1));
+
+    if (angle > 0.0001) {
+        const rotateQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
+        targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
+        isRotatingToTarget = true;
+    }
+
+}
+
+
+function displayAndLoadMarker(){
+    sphere1.visible = true;
+    sphere0.visible = true;
+    
+   
+    pulseVisible = true;
+
+    if(pulseVisible){
+         expandAndFade(sphere1);
+        gsap.delayedCall(1.5, () => {
+        expandAndFade(sphere1);
+        });
+        }
+    if(pulseVisible){
+  
+    }
+
+}
+
+function updatePlayer(station) {
+    const box = document.querySelector('.loadFailedBox');
+    box.classList.remove('show');
+    box.classList.add('hide');
+
+    sphere1.visible = false;
+    sphere0.visible = false;
+   
+    if(station.geo_lat){
+    setupMarker(station);
+    }
+
+    const recentlyPlayedList = document.getElementById("recentlyplayedlist");
+ 
+    if (!recentlyPlayedList.contains(currentlistitem)) {
+        
+        updateStationHistory(station);
+        getMostRecentStations();
+    }
+    
+    
+    
+    
  
     let textContent = station.state
         ? `${station.name} - ${station.state}, ${station.country}`
@@ -521,35 +560,10 @@ startmarkerFlashing();
 
 
     audioPlayer.oncanplay = () => {
-        sphere1.visible = true;
-        sphere0.visible = true;
+       
+    
+        displayAndLoadMarker();
         
-        const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
-        const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
-        targetDirection.applyQuaternion(currentRotation);
-
-        const forward = new THREE.Vector3(0, 0, 1);
-        const rotationAxis = new THREE.Vector3().crossVectors(targetDirection, forward).normalize();
-        const angle = Math.acos(Math.min(Math.max(targetDirection.dot(forward), -1), 1));
-
-        if (angle > 0.0001) {
-            const rotateQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
-            targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
-            isRotatingToTarget = true;
-        }
-
-        pulseVisible = true;
-
-        if(pulseVisible){
-             expandAndFade(sphere1);
-            gsap.delayedCall(1.5, () => {
-            expandAndFade(sphere1);
-            });
-            }
-        if(pulseVisible){
-      
-        }
-
         document.getElementById("loadinganimation").style.display = "none";
         
        
@@ -616,33 +630,135 @@ function togglePlay() {
 function nextStation() {
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
-    const next = particleIndexMap.get(currentStationIndex+1);
-    updatePlayer(next);
-    currentStation = next;
-    updateFavoritesList(); 
+
+    if (currentlistitem) {
+        
+        const isLast = currentlistitem === currentlistitem.parentElement.lastElementChild;
+        let nextListItem;
+    
+        if(isLast){
+            nextListItem = currentlistitem.parentElement.firstElementChild;
+        }
+    
+        else{
+            nextListItem = currentlistitem.nextElementSibling;
+
+        }
+      
+        if (nextListItem) {
+            const nameDiv = nextListItem.querySelector('.border-container > div');
+
+            if (nameDiv) {
+                const stationNameNode = Array.from(nameDiv.childNodes)
+                    .find(node => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim().length > 0);
+
+                if (stationNameNode) {
+                    const stationName = stationNameNode.nodeValue.trim();
+                    const station = stationsMaster.find(s => s.name.trim() === stationName);
+
+                    if (station) {
+                    
+                        currentStation = station;
+                        currentlistitem = nextListItem;
+                       
+                        highlightListItem(nextListItem);
+                      
+                        updatePlayer(station);
+                    } else {
+                        console.warn('Station not found in master list:', stationName);
+                    }
+                } else {
+                    console.warn('No text node with station name found in div.');
+                }
+            } else {
+                console.warn('No name div found in next list item.');
+            }
+        } else {
+            console.warn('No next list item found.');
+        }
+    } else {
+        const next = particleIndexMap.get(currentStationIndex + 1);
+        if (next) {
+            updatePlayer(next);
+            currentStation = next;
+        } else {
+            console.warn('No next station in index map.');
+        }
+    }
+
+
+    //updateFavoritesList(); 
     toggleButtonVisibility();
     wrangleHeart();
-    
-    currentStationIndex++;
 
+    currentStationIndex++;
 }
 
 
 function prevStation() {
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
-    const prev = particleIndexMap.get(currentStationIndex-1);
-    updatePlayer(prev);
-    currentStation = prev;
-    updateFavoritesList(); 
+
+    if (currentlistitem) {
+      
+        const isFirst = currentlistitem === currentlistitem.parentElement.firstElementChild;
+        let prevListItem;
+        if(isFirst){
+            prevListItem = currentlistitem.parentElement.lastElementChild;
+        }else{
+            prevListItem = currentlistitem.previousElementSibling;
+
+        }
+
+      
+
+        if (prevListItem) {
+            const nameDiv = prevListItem.querySelector('.border-container > div');
+
+            if (nameDiv) {
+                const stationNameNode = Array.from(nameDiv.childNodes)
+                    .find(node => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim().length > 0);
+
+                if (stationNameNode) {
+                    const stationName = stationNameNode.nodeValue.trim();
+                    const station = stationsMaster.find(s => s.name.trim() === stationName);
+
+                    if (station) {
+                     
+                        currentStation = station;
+                        currentlistitem = prevListItem;
+                        highlightListItem(prevListItem);
+                        updatePlayer(station);
+                    } else {
+                        console.warn('Station not found in master list:', stationName);
+                    }
+                } else {
+                    console.warn('No text node with station name found in div.');
+                }
+            } else {
+                console.warn('No name div found in previous list item.');
+            }
+        } else {
+            console.warn('No previous list item found.');
+        }
+    } else {
+        const prev = particleIndexMap.get(currentStationIndex - 1);
+        if (prev) {
+            updatePlayer(prev);
+            currentStation = prev;
+        } else {
+            console.warn('No previous station in index map.');
+        }
+    }
+
+  
+   // updateFavoritesList(); 
     toggleButtonVisibility();
     wrangleHeart();
-    
+
     currentStationIndex--;
-
-
-
 }
+
 
 
 function toggleVolume() {
@@ -709,23 +825,25 @@ function getMostRecentStations(count = 5) {
         listItem.classList.add("list-item");
     
 
-        listItem.addEventListener("click", () => {
+            listItem.addEventListener("click", () => {
             playBtn.src = "audioplayericons/blank.svg";
+           currentlistitem = listItem;
             updatePlayer(station);
             currentStation = station;
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+         
             }
+
+        
             toggleButtonVisibility();
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
-            currentlistitem = listItem;
+   
+          
             const removeButton = listItem.querySelector('.remove-btn');
 
-            updateFavoritesList(); 
-            highlightListItem();
+     
+            highlightListItem(listItem);
             wrangleHeart();
+          
         });
         const contentWrapper = document.createElement("div");
         contentWrapper.classList.add("border-container");
@@ -749,8 +867,9 @@ function getMostRecentStations(count = 5) {
        
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+               // listItem.style.backgroundColor = "#6D78D4";
+               // listItem.style.color = "#d896ed";
+               
             }
         }
        
@@ -799,6 +918,8 @@ function onClick(event) {
                 
 
                 if (station) {
+                    currentlistitem = null;
+                    rotateSphere(station);
                     console.log('Clicked Station:', station);
                     firstsong = false;
                     const material = station.material;
@@ -814,7 +935,8 @@ function onClick(event) {
                         updateStationHistory(currentStation);
                         getMostRecentStations();
                         toggleButtonVisibility();
-                        updateFavoritesList();
+                       // updateFavoritesList();
+                       highlightListItem();
                         wrangleHeart();
   
                     }
@@ -1082,11 +1204,27 @@ function updateDynamicScale() {
 
 }
 
-
+let counter = 0;
+let lastTime = Date.now();
 function animate() {
     requestAnimationFrame(animate);
+    
+    let now = Date.now();
+    let delta = now - lastTime;
+
+    counter += delta;
+
+    if (counter >= 1000) { // every 1000ms = 1 second
+    
+        counter = 0; // reset
+    }
+
+    lastTime = now;
+    
     camera.position.z += (targetZ - camera.position.z) * 0.1;
-   
+  
+    
+
     const minScale = 0.1;  
 const maxScale = 1.0;  
 const zoomRange = maxCameraZ - 105; 
@@ -1097,7 +1235,7 @@ const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
 
-   if (!hoverCircle.visible && !isRotatingToTarget) {
+   if (!hoverCircle.visible && !isRotatingToTarget && !isDragging) {
     const distanceScale = (camera.position.z - 130) / (230 - 130); 
     const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);  
 
@@ -1109,7 +1247,7 @@ markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
 
 if (isRotatingToTarget) {
-    sphereGroup.quaternion.slerp(targetQuaternion, 0.08);
+    sphereGroup.quaternion.slerp(targetQuaternion, 0.06);
     const angleToTarget = sphereGroup.quaternion.angleTo(targetQuaternion);
     if (angleToTarget < 0.001) {
         sphereGroup.quaternion.copy(targetQuaternion);
@@ -1350,15 +1488,15 @@ function loadLocalStations(localSearchResults) {
             
            
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+          //  currentlistitem.style.backgroundColor = "";
+           // currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            updateFavoritesList(); 
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+          //  updateFavoritesList(); 
+            //listItem.style.backgroundColor = "#6D78D4";
+           // listItem.style.color = "#d896ed";
             currentlistitem = listItem;
-            highlightListItem();
+            highlightListItem(listItem);
             wrangleHeart();
      
         });
@@ -1385,8 +1523,8 @@ function loadLocalStations(localSearchResults) {
 
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+               // listItem.style.backgroundColor = "#6D78D4";
+              //  listItem.style.color = "#d896ed";
             }
         }
         tab3List.appendChild(listItem);
@@ -1435,18 +1573,21 @@ function updateFavoritesList() {
             listItem.addEventListener("click", () => {
                 firstsong = false;
                 if (currentlistitem) {
-                    currentlistitem.style.backgroundColor = "";
-                    currentlistitem.style.color = "";
+                 
                 }
-
+                currentlistitem = listItem;
                 playBtn.src = "audioplayericons/blank.svg";
+             
                 updatePlayer(station);
                 currentStation = station;
-                updateFavoritesList();
-
-                highlightListItem();
+        
+           
+            
+                
+                highlightListItem(listItem);
                 toggleButtonVisibility();
                 wrangleHeart();
+           
                 
             });
 
@@ -1500,12 +1641,12 @@ function updateFavoritesList() {
             if (currentStation && station.name === currentStation.name) {
             
                 void removeButton.offsetWidth;
-
-                removeButton.style.opacity = 1;
-                removeButton.style.pointerEvents = "all";
-
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+               
+               // removeButton.style.opacity = 1;
+               // removeButton.style.pointerEvents = "all";
+                
+               // listItem.style.backgroundColor = "#6D78D4";
+               // listItem.style.color = "#d896ed";
             }
         }
     });
@@ -1553,14 +1694,14 @@ function handleHeartClick(event) {
     }
     
     favorites = getFavoriteStations();
-
+    let heartButton = event.target.parentElement.parentElement;
     if (!isFavorite) {
         
         favorites.push(currentStation); 
         saveFavoriteStations(favorites); 
     
         updateFavoritesList();
-       let heartButton = event.target.parentElement.parentElement;
+       
     
         updateHeartButton(heartButton, true); 
     } else {
@@ -1569,16 +1710,24 @@ function handleHeartClick(event) {
         updateHeartButton(heartButton, false); 
         
     }
+    highlightListItem();
 }
 
 
-function highlightListItem() {
+function highlightListItem(listItemClicked) {
+
+    const favList = document.querySelectorAll("#tab-1 .list li");
     const searchList = document.querySelectorAll("#tab-2 .list li");
     const recentList = document.querySelectorAll('#tab-3 .recentlyplayedlist li');
     const localList = document.querySelectorAll('#tab-3 .list li');
     const genreList = document.querySelectorAll('#genreStationList li');
+    const discover1 = document.querySelectorAll('#country1list li');
+    const discover2 = document.querySelectorAll('#country2list li');
+    const discover3 = document.querySelectorAll('#country3list li');
+    const discover = document.querySelectorAll('#panel3list li');
+    const discover4 = document.querySelectorAll('#panel2list li');
 
-    const allListItems = [...searchList, ...recentList, ...localList, ...genreList];
+    const allListItems = [...favList, ...searchList, ...recentList, ...localList, ...genreList, ...discover, ...discover1, ...discover2, ...discover3, ...discover4];
 
     allListItems.forEach(listItem => {
    
@@ -1589,16 +1738,36 @@ function highlightListItem() {
         if (h2) cloned.removeChild(h2);
 
         const stationName = cloned.textContent.trim();
+        const removeBtn = listItem.querySelector('.remove-btn');
+        
+        
+            if (listItem == listItemClicked){
+                listItem.style.color = "#4caff6";
+                listItem.style.backgroundColor = "#6D78D4";
+                
+                if(removeBtn){
+                    removeBtn.style.opacity = 1;
+                    removeBtn.style.pointerEvents = "all";
+                }
 
-        if (stationName === currentStation.name.trim()) {
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+            }
+        
+        else if (stationName === currentStation.name.trim()) {
+           // listItem.style.backgroundColor = "#6D78D4";
+            listItem.style.color = "#4caff6";
+            if(removeBtn){
+                removeBtn.style.opacity = 0;
+                removeBtn.style.pointerEvents = "none";
+            }
         } else {
-            if (listItem.style.backgroundColor === "rgb(109, 120, 212)" &&
-                listItem.style.color === "rgb(216, 150, 237)") {
+            
                 listItem.style.backgroundColor = "";
                 listItem.style.color = "";
-            }
+                if(removeBtn){
+                    removeBtn.style.opacity = 0;
+                    removeBtn.style.pointerEvents = "none";
+                }
+            
         }
     });
 }
@@ -1938,16 +2107,17 @@ function updateSearchResults(results, append = false) {
             updatePlayer(station);
             currentStation = station;
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+            //currentlistitem.style.backgroundColor = "";
+           // currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            updateFavoritesList(); 
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+           // updateFavoritesList(); 
+            //listItem.style.backgroundColor = "#6D78D4";
+           // listItem.style.color = "#d896ed";
             currentlistitem = listItem;
-            highlightListItem();
+            highlightListItem(listItem);
             wrangleHeart();
+         
            
         });
 
@@ -1975,8 +2145,8 @@ function updateSearchResults(results, append = false) {
          
             if(currentStation.changeuuid == station.changeuuid){
               
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+              //  listItem.style.backgroundColor = "#6D78D4";
+              //  listItem.style.color = "#d896ed";
             }
         }
         searchList.appendChild(listItem);
@@ -1988,7 +2158,7 @@ function updateSearchResults(results, append = false) {
 document.addEventListener('DOMContentLoaded', () => {
     const backbutton = document.getElementById('backbutton');
     backbutton.addEventListener('click', () => {
-        console.log("onclick added?");
+       
         genreBack();
     });
 });
@@ -2118,15 +2288,15 @@ function loadMoreGenreStations() {
             updatePlayer(station);
             currentStation = station;
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+           // currentlistitem.style.backgroundColor = "";
+           // currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            updateFavoritesList(); 
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+            //updateFavoritesList(); 
+           // listItem.style.backgroundColor = "#6D78D4";
+          //  listItem.style.color = "#d896ed";
             currentlistitem = listItem;
-            highlightListItem();
+            highlightListItem(listItem);
             wrangleHeart();
          
             
@@ -2162,8 +2332,8 @@ if(firstStation == 1){
 
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+             //   listItem.style.backgroundColor = "#6D78D4";
+              //  listItem.style.color = "#d896ed";
             }
         }
         stationList.appendChild(listItem);
@@ -2369,7 +2539,7 @@ async function fetchStationsByCountry(country, title) {
 
 
             if (countrySearchResults.length === 0) {
-                console.log("nothing found");
+              
             } else {
                 loadCountrySearchResults(title);
           
@@ -2385,7 +2555,7 @@ async function fetchStationsByCountry(country, title) {
 document.addEventListener('DOMContentLoaded', () => {
     const countrybackbutton = document.getElementById('countrybackbutton');
     countrybackbutton.addEventListener('click', () => {
-        console.log("onclick added?");
+      
         countryBack();
     });
 });
@@ -2474,15 +2644,15 @@ function loadCountrySearchResults(title){
             updatePlayer(station);
             currentStation = station;
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+           // currentlistitem.style.backgroundColor = "";
+           // currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            updateFavoritesList(); 
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+            //updateFavoritesList(); 
+          //  listItem.style.backgroundColor = "#6D78D4";
+          //  listItem.style.color = "#d896ed";
             currentlistitem = listItem;
-            highlightListItem();
+            highlightListItem(listItem);
             wrangleHeart();
        
         });
@@ -2514,8 +2684,8 @@ if(firstStation == 1){
 
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+             //   listItem.style.backgroundColor = "#6D78D4";
+             //   listItem.style.color = "#d896ed";
             }
         }
        
@@ -2640,15 +2810,15 @@ function loadCountryStations(countrySearchResults, list) {
             
            
             if(currentlistitem){
-            currentlistitem.style.backgroundColor = "";
-            currentlistitem.style.color = "";
+           // currentlistitem.style.backgroundColor = "";
+          //  currentlistitem.style.color = "";
             }
             toggleButtonVisibility();
-            updateFavoritesList(); 
-            listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#d896ed";
+           // updateFavoritesList(); 
+        //    listItem.style.backgroundColor = "#6D78D4";
+          //  listItem.style.color = "#d896ed";
             currentlistitem = listItem;
-            highlightListItem();
+            highlightListItem(listItem);
             wrangleHeart();
     
         });
@@ -2675,8 +2845,8 @@ function loadCountryStations(countrySearchResults, list) {
 
         if(currentStation){
             if(currentStation.changeuuid == station.changeuuid){
-                listItem.style.backgroundColor = "#6D78D4";
-                listItem.style.color = "#d896ed";
+               // listItem.style.backgroundColor = "#6D78D4";
+               // listItem.style.color = "#d896ed";
             }
         }
         list.appendChild(listItem);
@@ -2721,7 +2891,6 @@ async function getThreeRandomCountries() {
 
 
 
-
 function latLonToVector3(lat, lon, radius) {
     const phi = (90 - lat) * Math.PI / 180;
     const theta = (lon + 180) * Math.PI / 180;
@@ -2738,7 +2907,7 @@ function latLonToVector3(lat, lon, radius) {
       const type = feature.geometry.type;
 
       // Logging data to ensure it's correct
-      console.log(`Drawing ${feature.properties.name}...`);
+     // console.log(`Drawing ${feature.properties.name}...`);
       
       const drawRing = (ring) => {
         const points = ring.map(([lon, lat]) => latLonToVector3(lat, lon, radius));
