@@ -331,36 +331,50 @@ function getDynamicRadius() {
 }
 
 
-
-// Add stations as particles
 function addStationsAsParticles() {
 
-  
-    if (stationsList.length === 0) return;
-    let particleRadius = getDynamicRadius();
-   
-    const positions = new Float32Array(stationsList.length * 3);
+    // Clear the map before adding new stations
+    particleIndexMap.clear();
 
-    for (let i = 0; i < stationsList.length; i++) {
-        const { geo_lat, geo_long } = stationsList[i];
+    const uniqueStations = [];
+    const seenUUIDs = new Set();
+    const seenNames = new Set(); // To track station names
+
+    for (const station of stationsList) {
+        // Check if station has a valid geo_lat and is not a duplicate by UUID or name
+        if (station.geo_lat && !seenUUIDs.has(station.stationuuid) && !seenNames.has(station.name)) {
+            seenUUIDs.add(station.stationuuid);
+            seenNames.add(station.name);
+            uniqueStations.push(station);
+        }
+    }
+
+    if (uniqueStations.length === 0) return;
+
+    let particleRadius = getDynamicRadius();
+    const positions = new Float32Array(uniqueStations.length * 3);
+
+    for (let i = 0; i < uniqueStations.length; i++) {
+        const { geo_lat, geo_long } = uniqueStations[i];
         const position = latLonToCartesian(geo_lat, geo_long, particleRadius);
 
         positions[i * 3] = position.x;
         positions[i * 3 + 1] = position.y;
         positions[i * 3 + 2] = position.z;
-      
-        particleIndexMap.set(i, stationsList[i]); 
+
+        particleIndexMap.set(i, uniqueStations[i]);
     }
-
+//particleIndexMap.forEach((station, index) => {
+     //   console.log(`Station ${index}: ${station.name}`);
+   // });
+  
     const textureLoader = new THREE.TextureLoader();
-
-    
-
-  particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     particles = new THREE.Points(particleGeometry, particleMaterial);
     sphereGroup.add(particles);
 }
 
+ 
 function showTab(tabNumber) {
     // Hide all tab content
     
@@ -509,19 +523,26 @@ startmarkerFlashing();
 }
 
 function rotateSphere(station){
-    const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
-    const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
-    targetDirection.applyQuaternion(currentRotation);
+    
+    if(station.geo_lat){
+        const targetDirection = latLonToCartesian(station.geo_lat, station.geo_long, 1).normalize();
+        const currentRotation = new THREE.Quaternion().copy(sphereGroup.quaternion);
+        targetDirection.applyQuaternion(currentRotation);
 
-    const forward = new THREE.Vector3(0, 0, 1);
-    const rotationAxis = new THREE.Vector3().crossVectors(targetDirection, forward).normalize();
-    const angle = Math.acos(Math.min(Math.max(targetDirection.dot(forward), -1), 1));
+        const forward = new THREE.Vector3(0, 0, 1);
+        const rotationAxis = new THREE.Vector3().crossVectors(targetDirection, forward).normalize();
+        const angle = Math.acos(Math.min(Math.max(targetDirection.dot(forward), -1), 1));
 
-    if (angle > 0.0001) {
-        const rotateQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
-        targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
-        isRotatingToTarget = true;
+        if (angle > 0.0001) {
+            const rotateQuat = new THREE.Quaternion().setFromAxisAngle(rotationAxis, angle);
+            targetQuaternion = sphereGroup.quaternion.clone().premultiply(rotateQuat);
+            isRotatingToTarget = true;
+        }
     }
+   
+
+
+
 
 }
 
@@ -556,7 +577,7 @@ markerMaterial2.opacity = 0;
 markerMaterial3.opacity = 0;
     sphere1.visible = false;
     sphere0.visible = false;
-   
+    //   console.log(' currentlistitemnull3:', currentlistitem);
     if(station.geo_lat){
     setupMarker(station);
     }
@@ -564,17 +585,18 @@ markerMaterial3.opacity = 0;
         sphere0.position.set(0, 0, 0);
         sphere1.position.set(0, 0, 0);
     }
-
+   // console.log(' currentlistitemnull4:', currentlistitem);
     const recentlyPlayedList = document.getElementById("recentlyplayedlist");
- 
+    
+    if(currentlistitem){
     if (!recentlyPlayedList.contains(currentlistitem)) {
         //console.log("8493759834")
         updateStationHistory(station);
         getMostRecentStations();
     }
+}
     
-    
-    
+    //console.log(' currentlistitemnull5:', currentlistitem);
     
  
     let textContent = station.state
@@ -671,7 +693,7 @@ function nextStation() {
     hideMarker();
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
-
+console.log("currentlistitemWAKA", currentlistitem);
     if (currentlistitem) {
         
         const isLast = currentlistitem === currentlistitem.parentElement.lastElementChild;
@@ -725,6 +747,7 @@ function nextStation() {
         } else {
             console.warn('No next station in index map.');
         }
+        
     }
 
 
@@ -903,7 +926,7 @@ function getMostRecentStations(count = 5) {
       
       
           if(!currentlistitem){
-            currentlistitem = listItem;
+         //   currentlistitem = listItem;
            
         }
        
@@ -954,23 +977,29 @@ function onClick(event) {
                 if (station) {
                     currentlistitem = null;
                     
-                    console.log('Clicked Station:', station);
+                    console.log(' currentlistitemnull:', currentlistitem);
                     firstsong = false;
+                    
                     const material = station.material;
                     if (material instanceof THREE.PointsMaterial) {
                         material.size *= 1.2;
                     }
 
                     if (station.url) {
+                        console.log(' currentlistitemnull1:', currentlistitem);
                         playBtn.src = "audioplayericons/blank.svg";
                         playBtn.classList.add("disabledPlay2");
                         updatePlayer(station);
+                        
                         currentStation = station;
                         updateStationHistory(currentStation);
+                        console.log(' currentlistitemnull2:', currentlistitem);
                         getMostRecentStations();
+                        console.log(' currentlistitemnull3:', currentlistitem);
                         toggleButtonVisibility();
                        // updateFavoritesList();
-                       highlightListItem();
+                        highlightListItem();
+                        console.log(' currentlistitemnull4:', currentlistitem);
                         wrangleHeart();
   
                     }
