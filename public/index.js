@@ -693,7 +693,7 @@ function nextStation() {
     hideMarker();
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
-console.log("currentlistitemWAKA", currentlistitem);
+//console.log("currentlistitemWAKA", currentlistitem);
     if (currentlistitem) {
         
         const isLast = currentlistitem === currentlistitem.parentElement.lastElementChild;
@@ -977,7 +977,7 @@ function onClick(event) {
                 if (station) {
                     currentlistitem = null;
                     
-                    console.log(' currentlistitemnull:', currentlistitem);
+                   // console.log(' currentlistitemnull:', currentlistitem);
                     firstsong = false;
                     
                     const material = station.material;
@@ -986,20 +986,20 @@ function onClick(event) {
                     }
 
                     if (station.url) {
-                        console.log(' currentlistitemnull1:', currentlistitem);
+                      //  console.log(' currentlistitemnull1:', currentlistitem);
                         playBtn.src = "audioplayericons/blank.svg";
                         playBtn.classList.add("disabledPlay2");
                         updatePlayer(station);
                         
                         currentStation = station;
                         updateStationHistory(currentStation);
-                        console.log(' currentlistitemnull2:', currentlistitem);
+                       // console.log(' currentlistitemnull2:', currentlistitem);
                         getMostRecentStations();
-                        console.log(' currentlistitemnull3:', currentlistitem);
+                       // console.log(' currentlistitemnull3:', currentlistitem);
                         toggleButtonVisibility();
                        // updateFavoritesList();
                         highlightListItem();
-                        console.log(' currentlistitemnull4:', currentlistitem);
+                        //console.log(' currentlistitemnull4:', currentlistitem);
                         wrangleHeart();
   
                     }
@@ -1784,7 +1784,7 @@ function handleHeartClick(event) {
 
 
 function highlightListItem(listItemClicked) {
-console.log("listitemclicked", listItemClicked);
+//console.log("listitemclicked", listItemClicked);
     const favList = document.querySelectorAll("#tab-1 .list li");
     const searchList = document.querySelectorAll("#tab-2 .list li");
     const recentList = document.querySelectorAll('#tab-3 .recentlyplayedlist li');
