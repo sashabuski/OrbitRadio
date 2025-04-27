@@ -1297,7 +1297,7 @@ function animate() {
     const fogNear = THREE.MathUtils.mapLinear(
         camera.position.z,
         105, 230,  // input zoom range
-        -40, 300    // output fog near range
+        -25, 300    // output fog near range
     );
     scene.fog.near = fogNear;
     scene.fog.far = fogNear + 130; 
