@@ -244,7 +244,9 @@ particleGeometry = new THREE.BufferGeometry();
         toggleButtonVisibility();
         updateFavoritesList(); 
         updatePlayer(currentStation);
-       
+        const firstListItem = document.querySelector('#recentlyplayedlist .list-item');
+        currentlistitem = firstListItem;
+        highlightListItem(currentlistitem);  
         wrangleHeart();
         if (recentStation) {
             console.log("Most recent station:", recentStation.name);
