@@ -21,7 +21,7 @@ const singleStationsList = [];
 const particleIndexMap = new Map();
 const cityParticleIndexMap = new Map();
 let particleGeometry;
-
+let isDraggingCanvas;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -240,11 +240,12 @@ particleGeometry = new THREE.BufferGeometry();
 
         const recentStation = getMostRecentStation();
         currentStation = recentStation;
-        updatePlayer(currentStation);
-toggleButtonVisibility();
+        
+        toggleButtonVisibility();
         updateFavoritesList(); 
-            highlightListItem(currentlistitem);
-            wrangleHeart();
+        updatePlayer(currentStation);
+       
+        wrangleHeart();
         if (recentStation) {
             console.log("Most recent station:", recentStation.name);
         } else {
@@ -297,6 +298,8 @@ async function fetchStationsFromAPI(limit = 500000) {
         console.error('Error fetching stations from API:', error);
     }finally{
         hideLoadingOverlay();
+       // console.log("0000000000000000000000000", currentlistitem)
+        highlightListItem(currentlistitem);
     }
 }
 
@@ -310,16 +313,37 @@ let cityParticles;
 
 let cityParticleSystems = []; 
 
+
+function getDynamicRadius() {
+    const minZoom = 145;
+    const maxZoom = 230;
+    const minRadius = 98;
+    const maxRadius = 100.5;
+
+    // Clamp targetZ between min and max
+    const clampedZ = Math.max(minZoom, Math.min(maxZoom, targetZ));
+
+    // Normalize targetZ between 0 and 1
+    const t = (clampedZ - minZoom) / (maxZoom - minZoom);
+
+    // Interpolate radius
+    return minRadius + t * (maxRadius - minRadius);
+}
+
+
+
 // Add stations as particles
 function addStationsAsParticles() {
-    if (stationsList.length === 0) return;
 
+  
+    if (stationsList.length === 0) return;
+    let particleRadius = getDynamicRadius();
    
     const positions = new Float32Array(stationsList.length * 3);
 
     for (let i = 0; i < stationsList.length; i++) {
         const { geo_lat, geo_long } = stationsList[i];
-        const position = latLonToCartesian(geo_lat, geo_long, 100.1);
+        const position = latLonToCartesian(geo_lat, geo_long, particleRadius);
 
         positions[i * 3] = position.x;
         positions[i * 3 + 1] = position.y;
@@ -467,9 +491,7 @@ outerposition = direction.clone().multiplyScalar(baseDistance * 5.07);
 sphere0.position.copy(direction.clone().multiplyScalar(baseDistance * 1.145));
 sphere1.position.copy(direction.clone().multiplyScalar(baseDistance * 1.145));
 
-markerMaterial1.opacity = 0;
-markerMaterial2.opacity = 0;
-markerMaterial3.opacity = 0;
+
 
 sphereGroup.add(wireframeCubeObject);
 sphereGroup.add(atomGroup);
@@ -479,7 +501,10 @@ sphereGroup.add(marker3);
 sphereGroup.add(sphere0);
 sphereGroup.add(sphere1);
 
+if(station.geo_lat){
 fadeInMarkers();
+}
+
 startmarkerFlashing();
 }
 
@@ -521,21 +546,29 @@ function displayAndLoadMarker(){
 }
 
 function updatePlayer(station) {
+   
+    rotateSphere(station);
     const box = document.querySelector('.loadFailedBox');
     box.classList.remove('show');
     box.classList.add('hide');
-
+markerMaterial1.opacity = 0;
+markerMaterial2.opacity = 0;
+markerMaterial3.opacity = 0;
     sphere1.visible = false;
     sphere0.visible = false;
    
     if(station.geo_lat){
     setupMarker(station);
     }
+    else{
+        sphere0.position.set(0, 0, 0);
+        sphere1.position.set(0, 0, 0);
+    }
 
     const recentlyPlayedList = document.getElementById("recentlyplayedlist");
  
     if (!recentlyPlayedList.contains(currentlistitem)) {
-        
+        //console.log("8493759834")
         updateStationHistory(station);
         getMostRecentStations();
     }
@@ -572,8 +605,13 @@ function updatePlayer(station) {
         prevBtn.classList.remove("disabledPlay");        
         playBtn.classList.remove("disabledPlay2");
         
-
-        stopmarkerFlashing();
+if(station.geo_lat){
+ stopmarkerFlashing();
+}
+//else{
+   // hideMarker();
+//}
+       
        
        if(firstsong){
         playBtn.src = "audioplayericons/play.svg";
@@ -593,7 +631,9 @@ function updatePlayer(station) {
             box.classList.remove('hide');  
           box.classList.add('show');
         }, 100);
+        if(station.geo_lat){
         stopmarkerFlashing();
+        }
         playBtn.src = "audioplayericons/play.svg";
     };
 }
@@ -628,6 +668,7 @@ function togglePlay() {
 
 
 function nextStation() {
+    hideMarker();
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
 
@@ -660,10 +701,10 @@ function nextStation() {
                     
                         currentStation = station;
                         currentlistitem = nextListItem;
-                       
+                        updatePlayer(station);
                         highlightListItem(nextListItem);
                       
-                        updatePlayer(station);
+                   
                     } else {
                         console.warn('Station not found in master list:', stationName);
                     }
@@ -727,8 +768,9 @@ function prevStation() {
                      
                         currentStation = station;
                         currentlistitem = prevListItem;
-                        highlightListItem(prevListItem);
                         updatePlayer(station);
+                        highlightListItem(prevListItem);
+                       
                     } else {
                         console.warn('Station not found in master list:', stationName);
                     }
@@ -826,21 +868,13 @@ function getMostRecentStations(count = 5) {
     
 
             listItem.addEventListener("click", () => {
+            firstsong = false;            
             playBtn.src = "audioplayericons/blank.svg";
-           currentlistitem = listItem;
+            currentlistitem = listItem;
             updatePlayer(station);
             currentStation = station;
-            if(currentlistitem){
-         
-            }
-
-        
             toggleButtonVisibility();
-   
-          
             const removeButton = listItem.querySelector('.remove-btn');
-
-     
             highlightListItem(listItem);
             wrangleHeart();
           
@@ -864,17 +898,17 @@ function getMostRecentStations(count = 5) {
     
         contentWrapper.appendChild(textWrapper);
         listItem.appendChild(contentWrapper);
-       
-        if(currentStation){
-            if(currentStation.changeuuid == station.changeuuid){
-               // listItem.style.backgroundColor = "#6D78D4";
-               // listItem.style.color = "#d896ed";
-               
-            }
+        tab3List.appendChild(listItem);
+      
+      
+      
+          if(!currentlistitem){
+            currentlistitem = listItem;
+           
         }
        
 
-        tab3List.appendChild(listItem);
+     
     });
    
 }
@@ -919,7 +953,7 @@ function onClick(event) {
 
                 if (station) {
                     currentlistitem = null;
-                    rotateSphere(station);
+                    
                     console.log('Clicked Station:', station);
                     firstsong = false;
                     const material = station.material;
@@ -962,6 +996,9 @@ function onWheel(event) {
         targetZ += event.deltaY * zoomSpeed;
         targetZ = Math.max(105, Math.min(230, targetZ));
         updateDynamicScale();
+
+        sphereGroup.remove(particles); // Remove old ones
+        addStationsAsParticles(); 
     }
   
 }
@@ -985,7 +1022,10 @@ function onMouseDown(event) {
     if (event.target.tagName != "CANVAS") {
         boxclick = true;
       
-    } else {
+    } else if (event.target.tagName == "CANVAS"){
+        isDraggingCanvas = true;
+    }
+    else {
         boxclick = false;
     }
 }
@@ -1169,9 +1209,9 @@ nameText.style.animation = 'scrollText 15s linear infinite';
   
 
 function onMouseUp() {
-   
+    isDraggingCanvas = false;
     isDragging = false;
-   
+   boxclick = false;
     
 }
 
@@ -1215,7 +1255,7 @@ function animate() {
     counter += delta;
 
     if (counter >= 1000) { // every 1000ms = 1 second
-    
+        //console.log("boxclick: ", boxclick);
         counter = 0; // reset
     }
 
@@ -1235,7 +1275,7 @@ const scaleFactor = minScale + (maxScale - minScale) * normalizedZoom;
 markerGroup.scale.set(scaleFactor, scaleFactor, scaleFactor);
 
 
-   if (!hoverCircle.visible && !isRotatingToTarget && !isDragging) {
+   if (!hoverCircle.visible && !isRotatingToTarget && !isDraggingCanvas) {
     const distanceScale = (camera.position.z - 130) / (230 - 130); 
     const autoRotateSpeed = 0.001 * (0.1 + 0.7 * distanceScale);  
 
@@ -1483,19 +1523,11 @@ function loadLocalStations(localSearchResults) {
             firstsong = false;
             playBtn.src = "audioplayericons/blank.svg";
             playBtn.classList.add("disabledPlay2");
+            currentlistitem = listItem;
             updatePlayer(station);
             currentStation = station;
-            
-           
-            if(currentlistitem){
-          //  currentlistitem.style.backgroundColor = "";
-           // currentlistitem.style.color = "";
-            }
             toggleButtonVisibility();
-          //  updateFavoritesList(); 
-            //listItem.style.backgroundColor = "#6D78D4";
-           // listItem.style.color = "#d896ed";
-            currentlistitem = listItem;
+       
             highlightListItem(listItem);
             wrangleHeart();
      
@@ -1710,12 +1742,12 @@ function handleHeartClick(event) {
         updateHeartButton(heartButton, false); 
         
     }
-    highlightListItem();
+    highlightListItem(currentlistitem);
 }
 
 
 function highlightListItem(listItemClicked) {
-
+console.log("listitemclicked", listItemClicked);
     const favList = document.querySelectorAll("#tab-1 .list li");
     const searchList = document.querySelectorAll("#tab-2 .list li");
     const recentList = document.querySelectorAll('#tab-3 .recentlyplayedlist li');
@@ -1741,20 +1773,24 @@ function highlightListItem(listItemClicked) {
         const removeBtn = listItem.querySelector('.remove-btn');
         
         
-            if (listItem == listItemClicked){
-                listItem.style.color = "#4caff6";
-                listItem.style.backgroundColor = "#6D78D4";
-                
-                if(removeBtn){
-                    removeBtn.style.opacity = 1;
-                    removeBtn.style.pointerEvents = "all";
-                }
+        if (listItem == listItemClicked){
 
+            console.log("herehiglilitcitythecurrentlistitem");
+            listItem.style.color = "#00C0F7";
+            listItem.style.backgroundColor = "#6D78D4";
+            
+            if(removeBtn){
+                removeBtn.style.opacity = 1;
+                removeBtn.style.pointerEvents = "all";
             }
-        
+
+        }
+    
         else if (stationName === currentStation.name.trim()) {
-           // listItem.style.backgroundColor = "#6D78D4";
-            listItem.style.color = "#4caff6";
+         
+            listItem.style.backgroundColor = "";
+            listItem.style.color = "#00C0F7";
+            
             if(removeBtn){
                 removeBtn.style.opacity = 0;
                 removeBtn.style.pointerEvents = "none";
@@ -1946,6 +1982,15 @@ function flash(index = 0) {
             });
         }
 
+        function hideMarker() {
+            markerFlashing = false;
+            clearTimeout(flashTimeout);
+  
+            materials.forEach(mat => {
+                gsap.killTweensOf(mat); 
+                mat.opacity = 0;
+            });
+        }
 
         let marker4Flashing = false;
         let marker4Timeout = null;
@@ -2644,13 +2689,10 @@ function loadCountrySearchResults(title){
             updatePlayer(station);
             currentStation = station;
             if(currentlistitem){
-           // currentlistitem.style.backgroundColor = "";
-           // currentlistitem.style.color = "";
+        
             }
             toggleButtonVisibility();
-            //updateFavoritesList(); 
-          //  listItem.style.backgroundColor = "#6D78D4";
-          //  listItem.style.color = "#d896ed";
+       
             currentlistitem = listItem;
             highlightListItem(listItem);
             wrangleHeart();
