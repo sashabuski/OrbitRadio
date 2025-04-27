@@ -69,7 +69,7 @@ scene.add(light);
 scene.add(new THREE.AmbientLight(0x404040));
 const volumeSlider = document.getElementById("volume-slider");
 let firstStation = 1;
-
+scene.fog = new THREE.Fog(0xe9e9e9, 130, 260); 
 const markerGroup = new THREE.Group();
 scene.add(markerGroup);
 const uprightFix = new THREE.Euler(
@@ -1278,6 +1278,8 @@ let lastTime = Date.now();
 function animate() {
     requestAnimationFrame(animate);
     
+
+
     let now = Date.now();
     let delta = now - lastTime;
 
@@ -1292,7 +1294,13 @@ function animate() {
     
     camera.position.z += (targetZ - camera.position.z) * 0.1;
   
-    
+    const fogNear = THREE.MathUtils.mapLinear(
+        camera.position.z,
+        105, 230,  // input zoom range
+        -40, 300    // output fog near range
+    );
+    scene.fog.near = fogNear;
+    scene.fog.far = fogNear + 130; 
 
     const minScale = 0.1;  
 const maxScale = 1.0;  
@@ -1804,8 +1812,7 @@ console.log("listitemclicked", listItemClicked);
         
         if (listItem == listItemClicked){
 
-            console.log("herehiglilitcitythecurrentlistitem");
-            listItem.style.color = "#00C0F7";
+            listItem.style.color = "#db7bb8";
             listItem.style.backgroundColor = "#6D78D4";
             
             if(removeBtn){
@@ -1818,7 +1825,7 @@ console.log("listitemclicked", listItemClicked);
         else if (stationName === currentStation.name.trim()) {
          
             listItem.style.backgroundColor = "";
-            listItem.style.color = "#00C0F7";
+            listItem.style.color = "#9f4581";
             
             if(removeBtn){
                 removeBtn.style.opacity = 0;
