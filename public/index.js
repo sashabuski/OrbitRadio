@@ -1224,18 +1224,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
     }
 
 
-    tooltip.addEventListener("mouseenter", () => {
-     
-        isHoveringTooltip = false;
-        tooltip.style.visibility = "hidden";
-        tooltip.style.opacity = "0";
-      });
-  
-      tooltip.addEventListener("mouseleave", () => {
-        isHoveringTooltip = false;
-        tooltip.style.visibility = "hidden";
-        tooltip.style.opacity = "0";
-      });
+    
 
     }
 }
