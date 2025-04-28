@@ -280,6 +280,29 @@ function hideLoadingOverlay() {
   }
   
 
+  function updateCountryStationCount() {
+    countryNames.forEach(country => {
+      // Filter stations by country and ensure uniqueness by station name
+      const countrySearchResults = stationsMaster
+        .filter(station =>
+          station.url && 
+          station.country.toLowerCase().trim() === country.name.toLowerCase().trim()
+        )
+        .filter((station, index, self) =>
+          index === self.findIndex(s => s.name === station.name)
+        );
+  
+      // Update the count in the countryNames array
+      country.count = countrySearchResults.length;
+    });
+  
+    // Print the updated counts to the console
+    countryNames.forEach(country => {
+      console.log(`${country.name}: ${country.count} stations`);
+    });
+  }
+  
+
 async function fetchStationsFromAPI(limit = 500000) {
     
     showLoadingOverlay();
@@ -299,6 +322,7 @@ async function fetchStationsFromAPI(limit = 500000) {
     } catch (error) {
         console.error('Error fetching stations from API:', error);
     }finally{
+        updateCountryStationCount();
         hideLoadingOverlay();
        // console.log("0000000000000000000000000", currentlistitem)
         highlightListItem(currentlistitem);
