@@ -44,7 +44,7 @@ let hoverCircleSize = 2;
 
 const material = new THREE.LineBasicMaterial({ color: 0xbbc5fc, opacity: 0.1,  
     transparent: true,  depthWrite: false});
- //let isHoveringTooltip = false; 
+ let isHoveringTooltip = false; 
 
 let targetPosition;
 const line = new THREE.LineSegments(wireframe, material);
@@ -1223,10 +1223,12 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         tooltip.style.opacity = "0";
     }
 
-/*
+
     tooltip.addEventListener("mouseenter", () => {
      
-        isHoveringTooltip = true;
+        isHoveringTooltip = false;
+        tooltip.style.visibility = "hidden";
+        tooltip.style.opacity = "0";
       });
   
       tooltip.addEventListener("mouseleave", () => {
@@ -1234,7 +1236,7 @@ nameText.style.animation = 'scrollText 15s linear infinite';
         tooltip.style.visibility = "hidden";
         tooltip.style.opacity = "0";
       });
-*/ 
+
     }
 }
 }
