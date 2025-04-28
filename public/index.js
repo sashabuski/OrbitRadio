@@ -246,7 +246,7 @@ particleGeometry = new THREE.BufferGeometry();
         updatePlayer(currentStation);
         const firstListItem = document.querySelector('#recentlyplayedlist .list-item');
         currentlistitem = firstListItem;
-        highlightListItem(currentlistitem);  
+        highlightListItem(currentlistitem);    
         wrangleHeart();
         if (recentStation) {
             console.log("Most recent station:", recentStation.name);
@@ -280,29 +280,6 @@ function hideLoadingOverlay() {
   }
   
 
-  function updateCountryStationCount() {
-    countryNames.forEach(country => {
-      // Filter stations by country and ensure uniqueness by station name
-      const countrySearchResults = stationsMaster
-        .filter(station =>
-          station.url && 
-          station.country.toLowerCase().trim() === country.name.toLowerCase().trim()
-        )
-        .filter((station, index, self) =>
-          index === self.findIndex(s => s.name === station.name)
-        );
-  
-      // Update the count in the countryNames array
-      country.count = countrySearchResults.length;
-    });
-  
-    // Print the updated counts to the console
-    countryNames.forEach(country => {
-      console.log(`${country.name}: ${country.count} stations`);
-    });
-  }
-  
-
 async function fetchStationsFromAPI(limit = 500000) {
     
     showLoadingOverlay();
@@ -322,6 +299,7 @@ async function fetchStationsFromAPI(limit = 500000) {
     } catch (error) {
         console.error('Error fetching stations from API:', error);
     }finally{
+
         updateCountryStationCount();
         hideLoadingOverlay();
        // console.log("0000000000000000000000000", currentlistitem)
@@ -719,7 +697,7 @@ function nextStation() {
     hideMarker();
     playBtn.src = "audioplayericons/blank.svg";
     playBtn.classList.add("disabledPlay2");
-//console.log("currentlistitemWAKA", currentlistitem);
+console.log("currentlistitemWAKA", currentlistitem);
     if (currentlistitem) {
         
         const isLast = currentlistitem === currentlistitem.parentElement.lastElementChild;
@@ -1003,7 +981,7 @@ function onClick(event) {
                 if (station) {
                     currentlistitem = null;
                     
-                   // console.log(' currentlistitemnull:', currentlistitem);
+                    console.log(' currentlistitemnull:', currentlistitem);
                     firstsong = false;
                     
                     const material = station.material;
@@ -1012,20 +990,20 @@ function onClick(event) {
                     }
 
                     if (station.url) {
-                      //  console.log(' currentlistitemnull1:', currentlistitem);
+                        console.log(' currentlistitemnull1:', currentlistitem);
                         playBtn.src = "audioplayericons/blank.svg";
                         playBtn.classList.add("disabledPlay2");
                         updatePlayer(station);
                         
                         currentStation = station;
                         updateStationHistory(currentStation);
-                       // console.log(' currentlistitemnull2:', currentlistitem);
+                        console.log(' currentlistitemnull2:', currentlistitem);
                         getMostRecentStations();
-                       // console.log(' currentlistitemnull3:', currentlistitem);
+                        console.log(' currentlistitemnull3:', currentlistitem);
                         toggleButtonVisibility();
                        // updateFavoritesList();
                         highlightListItem();
-                        //console.log(' currentlistitemnull4:', currentlistitem);
+                        console.log(' currentlistitemnull4:', currentlistitem);
                         wrangleHeart();
   
                     }
@@ -1810,7 +1788,7 @@ function handleHeartClick(event) {
 
 
 function highlightListItem(listItemClicked) {
-//console.log("listitemclicked", listItemClicked);
+console.log("listitemclicked", listItemClicked);
     const favList = document.querySelectorAll("#tab-1 .list li");
     const searchList = document.querySelectorAll("#tab-2 .list li");
     const recentList = document.querySelectorAll('#tab-3 .recentlyplayedlist li');
@@ -2536,13 +2514,14 @@ function openCountryList(){
 
 const countryListContainer = document.getElementById('panel2list');
 
-
 function generateCountryList() {
     const sortedCountries = countryNames.sort((a, b) => 
         a.name.localeCompare(b.name)
     );
 
     sortedCountries.forEach(({ name, count }) => {
+        if (count === 0) return; // Skip if count is 0
+
         const listItem = document.createElement('li');
         listItem.classList.add('list-item', 'countryspacing');
 
@@ -2583,6 +2562,34 @@ function generateCountryList() {
         countryListContainer.appendChild(listItem);
     });
 }
+
+
+function updateCountryStationCount() {
+    countryNames.forEach(country => {
+      // Filter stations by country and ensure uniqueness by station name
+      const countrySearchResults = stationsMaster
+        .filter(station =>
+          station.url && 
+          station.country.toLowerCase().trim() === country.name.toLowerCase().trim()
+        )
+        .filter((station, index, self) =>
+          index === self.findIndex(s => s.name === station.name)
+        );
+  
+      // Update the count in the countryNames array
+      country.count = countrySearchResults.length;
+    });
+  
+    // Print the updated counts to the console
+   // countryNames.forEach(country => {
+     // console.log(`${country.name}: ${country.count} stations`);
+   // });
+  }
+  
+  // Call the function to update the counts and print to console
+ 
+
+
 
 let countrySearchResults = [];
 let countryRenderedCount = 0;
