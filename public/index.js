@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { countryNames } from './countries.js';
-
+let countryNames2;
 let stationsMaster = [];
 let title = true;
 let currentTab = "home";
@@ -2506,7 +2506,7 @@ function openCountryList(){
 const countryListContainer = document.getElementById('panel2list');
 
 function generateCountryList() {
-    const sortedCountries = countryNames.sort((a, b) => 
+    const sortedCountries = countryNames2.sort((a, b) => 
         a.name.localeCompare(b.name)
     );
 
@@ -2572,7 +2572,7 @@ function updateCountryStationCount() {
     });
 
     // Remove countries where count is 0
-    countryNames = countryNames.filter(country => country.count > 0);
+    countryNames2 = countryNames.filter(country => country.count > 0);
 }
 
   
@@ -2956,7 +2956,7 @@ function loadCountryStations(countrySearchResults, list) {
 }
 
 async function getThreeRandomCountries() {
-    const shuffled = [...countryNames].sort(() => 0.5 - Math.random());
+    const shuffled = [...countryNames2].sort(() => 0.5 - Math.random());
     const [{ name: name1 }, { name: name2 }, { name: name3 }] = shuffled;
 
     const header1 = document.getElementById('country1header');

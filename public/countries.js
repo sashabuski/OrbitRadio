@@ -1,4 +1,4 @@
-export let countryNames = [
+export const countryNames = [
   { name: "afghanistan", count: 140 },
   { name: "albania", count: 39 },
   { name: "algeria", count: 59 },
