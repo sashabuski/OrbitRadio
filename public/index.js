@@ -2566,25 +2566,24 @@ function generateCountryList() {
 
 function updateCountryStationCount() {
     countryNames.forEach(country => {
-      // Filter stations by country and ensure uniqueness by station name
-      const countrySearchResults = stationsMaster
-        .filter(station =>
-          station.url && 
-          station.country.toLowerCase().trim() === country.name.toLowerCase().trim()
-        )
-        .filter((station, index, self) =>
-          index === self.findIndex(s => s.name === station.name)
-        );
-  
-      // Update the count in the countryNames array
-      country.count = countrySearchResults.length;
+        // Filter stations by country and ensure uniqueness by station name
+        const countrySearchResults = stationsMaster
+            .filter(station =>
+                station.url &&
+                station.country.toLowerCase().trim() === country.name.toLowerCase().trim()
+            )
+            .filter((station, index, self) =>
+                index === self.findIndex(s => s.name === station.name)
+            );
+
+        // Update the count in the countryNames array
+        country.count = countrySearchResults.length;
     });
-  
-    // Print the updated counts to the console
-   // countryNames.forEach(country => {
-     // console.log(`${country.name}: ${country.count} stations`);
-   // });
-  }
+
+    // Remove countries where count is 0
+    countryNames = countryNames.filter(country => country.count > 0);
+}
+
   
   // Call the function to update the counts and print to console
  
